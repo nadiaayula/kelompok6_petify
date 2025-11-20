@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
+    return MaterialApp(
+      title: 'Petify',
+      theme: ThemeData(
+        primarySwatch: Colors.orange,
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
+      home: VpmHomeScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
