@@ -4,8 +4,8 @@ import '../widgets/pet_card.dart';
 import '../models/pet_model.dart';
 
 class VpmHomeScreen extends StatelessWidget {
-  final List<Pet> pets = [
-    Pet(
+  static const List<Pet> pets = [
+    const Pet(
       id: '1',
       name: "VINC",
       type: "Kucing",
@@ -15,7 +15,7 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Angora",
       imageUrl: "assets/cat1.png",
     ),
-    Pet(
+    const Pet(
       id: '2',
       name: "Umar",
       type: "Kucing", 
@@ -25,7 +25,7 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Persian",
       imageUrl: "assets/cat2.png",
     ),
-    Pet(
+    const Pet(
       id: '3',
       name: "Beta",
       type: "Kucing",
@@ -35,7 +35,7 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Siamese",
       imageUrl: "assets/cat3.png",
     ),
-    Pet(
+    const Pet(
       id: '4',
       name: "Kosmin",
       type: "Kucing",
@@ -46,6 +46,8 @@ class VpmHomeScreen extends StatelessWidget {
       imageUrl: "assets/cat4.png",
     ),
   ];
+
+  const VpmHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
