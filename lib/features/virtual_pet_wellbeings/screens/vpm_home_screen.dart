@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../rewards/screens/rewards_page.dart';
 import '../widgets/pet_card.dart';
 import '../models/pet_model.dart';
 
@@ -74,8 +75,13 @@ class VpmHomeScreen extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {},
+                    icon: Icon(Icons.card_giftcard, color: Colors.black),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RewardsPage()),
+                      );
+                    },
                   ),
                 ],
               ),
