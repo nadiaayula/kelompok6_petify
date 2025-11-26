@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
+import 'features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 
 
 void main() {
@@ -15,8 +16,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       ),
-      home: VpmHomeScreen(),
+      home: const DashboardScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
