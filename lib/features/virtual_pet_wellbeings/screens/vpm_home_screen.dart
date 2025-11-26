@@ -7,7 +7,7 @@ class VpmHomeScreen extends StatelessWidget {
   final List<Pet> pets = [
     Pet(
       id: '1',
-      name: "VINC",
+      name: "Vinc",
       type: "Kucing",
       age: "6 Bulan",
       weight: "2.5 Kg",
@@ -17,7 +17,7 @@ class VpmHomeScreen extends StatelessWidget {
     ),
     Pet(
       id: '2',
-      name: "Umar",
+      name: "Bolu",
       type: "Kucing", 
       age: "1 Tahun",
       weight: "3.2 Kg",
