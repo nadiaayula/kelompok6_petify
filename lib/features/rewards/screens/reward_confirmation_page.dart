@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'reward_status_dialog.dart';
 
 class RewardConfirmationPage extends StatefulWidget {
   final String rewardName;
@@ -19,6 +20,55 @@ class RewardConfirmationPage extends StatefulWidget {
 class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
   bool isAutoFill = false;
   String selectedShipping = '';
+  bool isConfirmed = false;
+  
+  // Controllers untuk text fields
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController provinceController = TextEditingController();
+  final TextEditingController postalCodeController = TextEditingController();
+  
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    provinceController.dispose();
+    postalCodeController.dispose();
+    super.dispose();
+  }
+  
+  // Fungsi validasi
+  bool _validateForm() {
+    if (nameController.text.trim().isEmpty) {
+      return false;
+    }
+    if (phoneController.text.trim().isEmpty) {
+      return false;
+    }
+    if (emailController.text.trim().isEmpty) {
+      return false;
+    }
+    if (addressController.text.trim().isEmpty) {
+      return false;
+    }
+    if (provinceController.text.trim().isEmpty) {
+      return false;
+    }
+    if (postalCodeController.text.trim().isEmpty) {
+      return false;
+    }
+    if (selectedShipping.isEmpty) {
+      return false;
+    }
+    if (!isConfirmed) {
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +96,11 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
               const Text(
                 'Halaman konfirmasi penukaran reward pointmu',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
 
+              // Progress indicator
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -62,6 +114,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 32),
 
+              // Product image
               Center(
                 child: Container(
                   width: double.infinity,
@@ -91,6 +144,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 16),
 
+              // Points badge
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -124,19 +178,21 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 32),
 
+              // Nama/ID
               const Text(
                 'Nama/ID',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
               const SizedBox(height: 12),
-              _buildTextField('Nama lengkap'),
+              _buildTextField('Nama lengkap', nameController),
               const SizedBox(height: 12),
               _buildPhoneField(),
               const SizedBox(height: 12),
-              _buildTextField('E-mail'),
+              _buildTextField('E-mail', emailController),
 
               const SizedBox(height: 24),
 
+              // Isi otomatis toggle
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -167,6 +223,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
+              // Alamat Penerima
               const Text(
                 'Alamat Penerima',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -176,37 +233,39 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _buildTextField('Provinsi')),
+                  Expanded(child: _buildTextField('Provinsi', provinceController)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildTextField('Kode pos')),
+                  Expanded(child: _buildTextField('Kode pos', postalCodeController)),
                 ],
               ),
 
               const SizedBox(height: 24),
 
+              // Ekspedisi Pengiriman
               const Text(
                 'Ekspedisi Pengiriman',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              const SizedBox(height: 16),
-
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 2.2,
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  _buildShippingOption('Anteraja', 'assets/anteraja.png'),
-                  _buildShippingOption('JNE', 'assets/jne.png'),
-                  _buildShippingOption('J&T', 'assets/jnt.png'),
-                  _buildShippingOption('SiCepat', 'assets/sicepat.png'),
+                  Expanded(child: _buildShippingOption('Anteraja', 'assets/anteraja.png')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildShippingOption('JNE', 'assets/jne.png')),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: _buildShippingOption('J&T', 'assets/jnt.png')),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildShippingOption('SiCepat', 'assets/sicepat.png')),
                 ],
               ),
 
               const SizedBox(height: 24),
 
+              // Confirmation checkbox
               Row(
                 children: [
                   const Expanded(
@@ -216,8 +275,12 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                     ),
                   ),
                   Switch(
-                    value: true,
-                    onChanged: (value) {},
+                    value: isConfirmed,
+                    onChanged: (value) {
+                      setState(() {
+                        isConfirmed = value;
+                      });
+                    },
                     activeColor: Colors.orange,
                   ),
                 ],
@@ -225,6 +288,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
+              // Buttons
               Row(
                 children: [
                   Expanded(
@@ -246,7 +310,16 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Validasi form sebelum submit
+                        if (_validateForm()) {
+                          // Semua field terisi, tampilkan success
+                          RewardStatusDialog.show(context, isSuccess: true);
+                        } else {
+                          // Ada field yang kosong, tampilkan failed
+                          RewardStatusDialog.show(context, isSuccess: false);
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -309,7 +382,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
     );
   }
 
-  Widget _buildTextField(String hint) {
+  Widget _buildTextField(String hint, TextEditingController controller) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -317,6 +390,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           hintText: hint,
           border: InputBorder.none,
@@ -363,6 +437,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
+              controller: phoneController,
               decoration: InputDecoration(
                 hintText: 'Nomor telepon',
                 border: InputBorder.none,
@@ -387,6 +462,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
         children: [
           Expanded(
             child: TextField(
+              controller: addressController,
               decoration: InputDecoration(
                 hintText: 'Alamat',
                 border: InputBorder.none,
@@ -401,8 +477,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
   }
 
   Widget _buildShippingOption(String name, String assetPath) {
-    final bool isSelected = selectedShipping == name;
-
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -410,19 +484,22 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
         });
       },
       child: Container(
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFF7E6) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.orange[50],
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? Colors.orange : const Color(0xFFEAEAEA),
-            width: 1,
+            color: selectedShipping == name ? Colors.orange : Colors.transparent,
+            width: 2,
           ),
         ),
         child: Center(
-          child: Image.asset(
-            assetPath,
-            height: 40,
-            fit: BoxFit.contain,
+          child: Text(
+            name,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
         ),
       ),
