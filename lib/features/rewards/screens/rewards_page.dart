@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'reward_confirmation_page.dart';
 
 class RewardsPage extends StatefulWidget {
   const RewardsPage({Key? key}) : super(key: key);
@@ -288,70 +289,84 @@ class _RewardsPageState extends State<RewardsPage> {
   }
 
   Widget _buildRewardCard(String title, String points, Color color, {bool isSpecial = false, String? imageUrl}) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: isSpecial ? null : () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RewardConfirmationPage(
+              rewardName: title,
+              rewardPoints: points,
+              imageUrl: imageUrl,
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!isSpecial) ...[
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: imageUrl == null ? Colors.grey[200] : null,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: imageUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12.0),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Image.asset(
-                          imageUrl,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.pets, size: 40);
-                          },
+        );
+      },
+      child: Container(
+        width: 140,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!isSpecial) ...[
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: imageUrl == null ? Colors.grey[200] : null,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: imageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Image.asset(
+                            imageUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.pets, size: 40);
+                            },
+                          ),
                         ),
-                      ),
-                    )
-                  : const Icon(Icons.pets, size: 40),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: isSpecial ? 16 : 14,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: isSpecial ? TextAlign.left : TextAlign.center,
-          ),
-          if (!isSpecial && points.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              points,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+                      )
+                    : const Icon(Icons.pets, size: 40),
               ),
+              const SizedBox(height: 12),
+            ],
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: isSpecial ? 16 : 14,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: isSpecial ? TextAlign.left : TextAlign.center,
             ),
+            if (!isSpecial && points.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                points,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
