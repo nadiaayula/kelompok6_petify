@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../rewards/screens/rewards_page.dart';
 import '../widgets/pet_card.dart';
 import '../models/pet_model.dart';
 
@@ -7,7 +8,7 @@ class VpmHomeScreen extends StatelessWidget {
   final List<Pet> pets = [
     Pet(
       id: '1',
-      name: "VINC",
+      name: "Vinc",
       type: "Kucing",
       age: "6 Bulan",
       weight: "2.5 Kg",
@@ -17,7 +18,7 @@ class VpmHomeScreen extends StatelessWidget {
     ),
     Pet(
       id: '2',
-      name: "Umar",
+      name: "Bolu",
       type: "Kucing", 
       age: "1 Tahun",
       weight: "3.2 Kg",
@@ -74,8 +75,13 @@ class VpmHomeScreen extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {},
+                    icon: Icon(Icons.card_giftcard, color: Colors.black),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RewardsPage()),
+                      );
+                    },
                   ),
                 ],
               ),
