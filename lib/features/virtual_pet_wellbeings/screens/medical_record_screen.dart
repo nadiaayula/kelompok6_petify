@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'add_medical_record_screen.dart';
+import 'add_vaksin_screen.dart';
 
 class MedicalRecordScreen extends StatelessWidget {
   const MedicalRecordScreen({super.key});
@@ -11,7 +12,7 @@ class MedicalRecordScreen extends StatelessWidget {
       body: Column(
         children: [
           Stack(
-            clipBehavior: Clip.none, // Allows the image to overflow the Stack's bounds
+            clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
               // Pink Header Background
@@ -25,6 +26,7 @@ class MedicalRecordScreen extends StatelessWidget {
                   ),
                 ),
               ),
+              
               // Positioned Title
               Positioned(
                 top: 70, // Moved down a bit
@@ -37,22 +39,72 @@ class MedicalRecordScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Positioned Image, hanging off the bottom
+              
+              // Positioned Image pet_doctors (tidak clickable lagi)
               Positioned(
-                top: 60, // Starts near the bottom of the pink container
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AddMedicalRecordScreen(),
+                top: 60,
+                child: Image.asset(
+                  'assets/pet_doctors.png',
+                  height: 220,
+                ),
+              ),
+              
+              // Add New Buttons (vaksinasi + tambah medical) di atas pet_doctors
+              Positioned(
+                top: 150, // sesuaikan untuk posisi vertikal
+                right: 40, // sesuaikan untuk posisi horizontal
+                child: Row(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          width: 64, // area tap lebih besar
+                          height: 64,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/vaksinasi.png',
+                              width: 48, // ukuran gambar lebih besar
+                              height: 48,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                  child: Image.asset(
-                    'assets/pet_doctors.png',
-                    height: 220, // Explicit height to control overflow
-                  ),
+                    ),
+
+                    const SizedBox(width: 8), // jarak lebih rapat
+
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          width: 64, // area tap lebih besar
+                          height: 64,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/add_medical.png',
+                              width: 48, // ukuran gambar lebih besar
+                              height: 48,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
