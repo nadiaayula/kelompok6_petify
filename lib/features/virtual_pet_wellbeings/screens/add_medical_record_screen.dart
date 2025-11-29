@@ -54,6 +54,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
               const Expanded(
                 child: Text(
                   'Medical Record',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'PlusJakartaSans',
                     color: Colors.black,
