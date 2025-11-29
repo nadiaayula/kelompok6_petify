@@ -14,7 +14,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: const Color(0xFFF8F8F8), // ubah dari 0xFFFAFAFA ke 0xFFF8F8F8
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -304,7 +304,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white, // tetap putih untuk field
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
@@ -313,14 +313,15 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
+          color: Color(0xFFB7B7B7), // ubah warna font ke B7B7B7
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(
+          hintStyle: const TextStyle(
             fontFamily: 'PlusJakartaSans',
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: Colors.grey[400],
+            color: Color(0xFFB7B7B7), // ubah hint color ke B7B7B7
           ),
           suffixIcon: suffixIcon,
           border: OutlineInputBorder(
@@ -339,7 +340,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   Widget _buildPhoneField() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white, // tetap putih
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -356,7 +357,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 const Icon(
                   Icons.arrow_forward_ios,
                   size: 12,
-                  color: Colors.grey,
+                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
                 ),
               ],
             ),
@@ -367,14 +368,15 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
+                color: Color(0xFFB7B7B7), // ubah ke B7B7B7
               ),
               decoration: InputDecoration(
                 hintText: 'Nomor telepon',
-                hintStyle: TextStyle(
+                hintStyle: const TextStyle(
                   fontFamily: 'PlusJakartaSans',
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: Colors.grey[400],
+                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
                 ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
