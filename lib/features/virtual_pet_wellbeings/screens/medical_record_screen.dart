@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_medical_record_screen.dart';
 
 class MedicalRecordScreen extends StatelessWidget {
   const MedicalRecordScreen({super.key});
@@ -39,9 +40,19 @@ class MedicalRecordScreen extends StatelessWidget {
               // Positioned Image, hanging off the bottom
               Positioned(
                 top: 60, // Starts near the bottom of the pink container
-                child: Image.asset(
-                  'assets/images/pet_doctors.png',
-                  height: 220, // Explicit height to control overflow
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AddMedicalRecordScreen(),
+                      ),
+                    );
+                  },
+                  child: Image.asset(
+                    'assets/pet_doctors.png',
+                    height: 220, // Explicit height to control overflow
+                  ),
                 ),
               ),
             ],
@@ -51,44 +62,61 @@ class MedicalRecordScreen extends StatelessWidget {
           SizedBox(height: 80), 
 
           // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_back_ios, size: 20),
-                SizedBox(width: 15),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Penelusuran',
-                          style: TextStyle(color: Colors.grey[400]),
-                        ),
-                        Spacer(),
-                        Icon(Icons.search, color: Colors.orange),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 15),
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.qr_code_scanner, color: Colors.white),
-                ),
-              ],
-            ),
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+  child: Row(
+    children: [
+      // BACK BUTTON WITH BOX
+      Container(
+        padding: EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10), // kotak rounded
+        ),
+        child: Icon(
+          Icons.arrow_back_ios,
+          size: 18,
+          color: Colors.black87,
+        ),
+      ),
+      
+      SizedBox(width: 15),
+
+      // SEARCH BAR
+      Expanded(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
           ),
-          SizedBox(height: 20),
+          child: Row(
+            children: [
+              Text(
+                'Penelusuran',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+              Spacer(),
+              Icon(Icons.search, color: Colors.orange),
+            ],
+          ),
+        ),
+      ),
+
+      SizedBox(width: 15),
+
+              // FILTER ICON (no box)
+              Image.asset(
+                'assets/filter.png',
+                width: 48,
+                height: 48,
+              ),
+            ],
+          ),
+        ),
+
+SizedBox(height: 20),
+
           
           // Medical Records List
           Expanded(
@@ -105,13 +133,15 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: '🐱',
+                  icon: 'assets/iconkucingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
                 ),
                 _buildMedicalCard(
-                  icon: '🐱',
+                  icon: 'assets/iconkucingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
@@ -129,7 +159,8 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: '🐺',
+                  icon: 'assets/iconanjingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
                   clinic: 'Klinik Peduli Anabul Indonesia',
@@ -148,20 +179,23 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: '🐱',
+                  icon: 'assets/iconkucingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
                 ),
                 _buildMedicalCard(
-                  icon: '🐺',
+                  icon: 'assets/iconanjingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
                   clinic: 'Klinik Peduli Anabul Indonesia',
                   iconColor: Colors.purple,
                 ),
                 _buildMedicalCard(
-                  icon: '🐱',
+                  icon: 'assets/iconkucingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
@@ -179,14 +213,16 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: '🐺',
+                  icon: 'assets/iconanjingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
                   clinic: 'Klinik Peduli Anabul Indonesia',
                   iconColor: Colors.purple,
                 ),
                 _buildMedicalCard(
-                  icon: '🐺',
+                  icon: 'assets/iconanjingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
                   clinic: 'Klinik Peduli Anabul Indonesia',
@@ -204,7 +240,8 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: '🐱',
+                  icon: 'assets/iconkucingmed.png',
+                  iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
@@ -220,6 +257,7 @@ class MedicalRecordScreen extends StatelessWidget {
   
   Widget _buildMedicalCard({
     required String icon,
+    double iconSize = 35,
     required String title,
     required String date,
     required String clinic,
@@ -244,14 +282,13 @@ class MedicalRecordScreen extends StatelessWidget {
           Container(
             width: 50,
             height: 50,
-            decoration: BoxDecoration(
-              color: (iconColor ?? Colors.orange).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            
             child: Center(
-              child: Text(
+              child: Image.asset(
                 icon,
-                style: TextStyle(fontSize: 28),
+                width: iconSize,
+                height: iconSize,
+                fit: BoxFit.contain,
               ),
             ),
           ),
