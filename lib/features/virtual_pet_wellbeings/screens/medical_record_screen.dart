@@ -40,84 +40,71 @@ class MedicalRecordScreen extends StatelessWidget {
                 ),
               ),
               
-              // Ganti: pet_doctors + tombol terpisah menjadi satu Stack berukuran tetap
+              // Positioned Image pet_doctors (tidak clickable lagi)
               Positioned(
-                top: 60, // atau nilai yang sesuai untuk jarak dari header
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: SizedBox(
-                    width: 260, // atur sesuai lebar gambar pet_doctors
-                    height: 220, // atur sesuai tinggi gambar pet_doctors
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        // gambar utama
-                        Positioned.fill(
-                          child: Image.asset(
-                            'assets/pet_doctors.png',
-                            width: 260,
-                            height: 220,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-
-                        // tombol vaksinasi di kiri-bawah relatif terhadap gambar
-                        Positioned(
-                          left: 20, // jarak dari sisi kiri gambar (sesuaikan)
-                          bottom: 12, // jarak dari dasar gambar (sesuaikan)
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              child: SizedBox(
-                                width: 64,
-                                height: 64,
-                                child: Center(
-                                  child: Image.asset(
-                                    'assets/vaksinasi.png',
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
+                top: 60,
+                child: Image.asset(
+                  'assets/pet_doctors.png',
+                  height: 220,
+                ),
+              ),
+              
+              // Add New Buttons (vaksinasi + tambah medical) di atas pet_doctors
+              Positioned(
+                top: 150, // sesuaikan untuk posisi vertikal
+                right: 40, // sesuaikan untuk posisi horizontal
+                child: Row(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          width: 64, // area tap lebih besar
+                          height: 64,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/vaksinasi.png',
+                              width: 48, // ukuran gambar lebih besar
+                              height: 48,
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
-
-                        // tombol add medical di kanan-bawah relatif terhadap gambar
-                        Positioned(
-                          right: 20, // jarak dari sisi kanan gambar (sesuaikan)
-                          bottom: 12,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              child: SizedBox(
-                                width: 64,
-                                height: 64,
-                                child: Center(
-                                  child: Image.asset(
-                                    'assets/add_medical.png',
-                                    width: 48,
-                                    height: 48,
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+
+                    const SizedBox(width: 8), // jarak lebih rapat
+
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          width: 64, // area tap lebih besar
+                          height: 64,
+                          child: Center(
+                            child: Image.asset(
+                              'assets/add_medical.png',
+                              width: 48, // ukuran gambar lebih besar
+                              height: 48,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
