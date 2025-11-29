@@ -19,16 +19,18 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
+        toolbarHeight: 80, // tambahkan tinggi AppBar
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // ubah ke spaceBetween
             children: [
               // BACK BUTTON WITH BOX
               GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
@@ -43,22 +45,20 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                   child: const Icon(
                     Icons.arrow_back_ios_new,
                     size: 18,
-                    color: Colors.black87,
+                    color: Colors.grey,
                   ),
                 ),
               ),
               
-              const SizedBox(width: 15),
-              
-              // TITLE
-              const Expanded(
+              // TITLE - ubah jadi Flexible
+              const Flexible(
                 child: Text(
                   'Medical Record',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'PlusJakartaSans',
                     color: Colors.black,
-                    fontSize: 18,
+                    fontSize: 24,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -66,7 +66,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
               
               // MENU BUTTON
               Container(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
@@ -81,7 +81,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 child: const Icon(
                   Icons.menu,
                   size: 18,
-                  color: Colors.black87,
+                  color: Colors.grey,
                 ),
               ),
             ],
