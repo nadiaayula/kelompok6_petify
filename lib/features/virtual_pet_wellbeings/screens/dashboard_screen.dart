@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// 1. PET MODEL & DATA (Copied from vpm_home_screen as requested)
+// 1. PET MODEL
 class Pet {
   final String id;
   final String name;
@@ -26,7 +26,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // 2. The List of Pets
+  // 2. YOUR PET DATA (Vinc, Bolu, etc.)
   final List<Pet> pets = [
     Pet(
       id: '1',
@@ -57,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       imageUrl: "assets/kucing3.png",
     )
   ];
-}
+
   // Controller for the carousel
   final PageController _pageController = PageController(viewportFraction: 0.9);
 
@@ -74,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             CircleAvatar(
               radius: 22,
               backgroundColor: Colors.grey[200],
-              backgroundImage: const NetworkImage("https://placehold.co/100x100/png?text=R"),
+              backgroundImage: const NetworkImage("https://placehold.co/100x100/png?text=A"),
             ),
             const SizedBox(width: 12),
             Column(
@@ -111,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // --- PADDING FOR TOP SECTION ---
+            // --- POINTS CARD ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: _buildPointsCard(),
@@ -199,15 +199,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 16),
                   _buildRewardsList(),
                   const SizedBox(height: 24),
-                  
-                  // --- ADOPTION SECTION ---
-                  Text(
-                    "Adopsi Hewan",
-                    style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildAdoptionList(),
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -216,6 +207,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  // --- HELPER WIDGETS (Required for build method) ---
 
   Widget _buildPointsCard() {
     return Container(
@@ -279,10 +272,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // 4. UPDATED CARD WIDGET TO ACCEPT PET DATA
   Widget _buildPetWellbeingCard(Pet pet) {
     return Container(
-      // margin: const EdgeInsets.only(right: 16), // Handled by PageView padding
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -293,16 +284,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Column(
         children: [
-          // Dynamic Image
           Expanded(
-            child: Image.network(
+            child: Image.asset(
               pet.imageUrl, 
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => const Icon(Icons.pets, size: 80, color: Colors.grey),
+              errorBuilder: (context, error, stackTrace) => Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                  const SizedBox(height: 8),
+                  Text("Asset not found:\n${pet.imageUrl}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 16),
-          // Dynamic Name
           Text(
             pet.name, 
             style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.bold)
@@ -322,7 +318,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text("Pengingat", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 2),
-                  // Dynamic reminder text
                   Text("Apabila \"${pet.name}\" butuh vaksin", style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)),
                 ],
               ),
@@ -411,40 +406,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAdoptionList() {
-    return Row(
-      children: [
-        Expanded(child: _adoptionCard("Kucing", "6+ Jenis", "https://placehold.co/100x100/png?text=Cat")),
-        const SizedBox(width: 16),
-        Expanded(child: _adoptionCard("Anjing", "4+ Jenis", "https://placehold.co/100x100/png?text=Dog")),
-      ],
-    );
-  }
-
-  Widget _adoptionCard(String title, String subtitle, String imgUrl) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(imgUrl, width: 50, height: 50, fit: BoxFit.cover),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text(subtitle, style: GoogleFonts.plusJakartaSans(fontSize: 10, color: Colors.grey)),
-            ],
-          )
-        ],
-      ),
-    );
-  }
 }

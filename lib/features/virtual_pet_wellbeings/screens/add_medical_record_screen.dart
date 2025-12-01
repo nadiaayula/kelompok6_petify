@@ -10,6 +10,7 @@ class AddMedicalRecordScreen extends StatefulWidget {
 class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   bool _autoFill = false;
   String _selectedCountryCode = '🇮🇩';
+  DateTime? _selectedDate;
 
   @override
   Widget build(BuildContext context) {
@@ -245,8 +246,10 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.calendar_today,
-                  label: 'Tanggal',
-                  onTap: () {},
+                  label: _selectedDate == null 
+                    ? 'Tanggal' 
+                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                  onTap: () => _selectDate(context),
                 ),
               ),
               const SizedBox(width: 12),
@@ -426,5 +429,29 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFFF6B6B),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
   }
 }

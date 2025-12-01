@@ -135,60 +135,75 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           SizedBox(height: 80), 
 
           // Search Bar
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-  child: Row(
-    children: [
-      // BACK BUTTON WITH BOX
-      Container(
-        padding: EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10), // kotak rounded
-        ),
-        child: Icon(
-          Icons.arrow_back_ios,
-          size: 18,
-          color: Colors.black87,
-        ),
-      ),
-      
-      SizedBox(width: 15),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              children: [
+                // BACK BUTTON WITH BOX
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                      size: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                
+                SizedBox(width: 15),
 
-      // SEARCH BAR
-      Expanded(
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
+                // SEARCH BAR
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _showSearchDialog();
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            _searchQuery.isEmpty ? 'Penelusuran' : _searchQuery,
+                            style: TextStyle(
+                              color: _searchQuery.isEmpty ? Colors.grey[400] : Colors.black,
+                            ),
+                          ),
+                          Spacer(),
+                          Icon(Icons.search, color: Colors.orange),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                SizedBox(width: 15),
+
+                // FILTER ICON (no box)
+                Image.asset(
+                  'assets/filter.png',
+                  width: 48,
+                  height: 48,
+                ),
+              ],
+            ),
           ),
-          child: Row(
-            children: [
-              Text(
-                'Penelusuran',
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-              Spacer(),
-              Icon(Icons.search, color: Colors.orange),
-            ],
-          ),
-        ),
-      ),
 
-      SizedBox(width: 15),
-
-              // FILTER ICON (no box)
-              Image.asset(
-                'assets/filter.png',
-                width: 48,
-                height: 48,
-              ),
-            ],
-          ),
-        ),
-
-SizedBox(height: 20),
+          SizedBox(height: 20),
 
           
           // Medical Records List
@@ -355,7 +370,6 @@ SizedBox(height: 20),
           Container(
             width: 50,
             height: 50,
-            
             child: Center(
               child: Image.asset(
                 icon,
@@ -399,6 +413,42 @@ SizedBox(height: 20),
           ),
         ],
       ),
+    );
+  }
+
+  void _showSearchDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Cari Rekam Medis'),
+          content: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Masukkan nama hewan atau pemeriksaan...',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _searchQuery = _searchController.text;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Mencari: $_searchQuery')),
+                );
+              },
+              child: Text('Cari'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

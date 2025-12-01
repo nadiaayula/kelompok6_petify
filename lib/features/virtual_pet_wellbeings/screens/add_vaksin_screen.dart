@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
   const AddVaksinScreen({Key? key}) : super(key: key);
@@ -9,6 +10,8 @@ class AddVaksinScreen extends StatefulWidget {
 
 class _AddVaksinScreenState extends State<AddVaksinScreen> {
   String _selectedCountryCode = '🇮🇩';
+  DateTime? _selectedDate;
+  String? _selectedVaksin;
 
   @override
   Widget build(BuildContext context) {
@@ -176,16 +179,18 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.calendar_today,
-                  label: 'Tanggal',
-                  onTap: () {},
+                  label: _selectedDate == null 
+                    ? 'Tanggal' 
+                    : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                  onTap: () => _selectDate(context),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.vaccines_outlined,
-                  label: 'Vaksin',
-                  onTap: () {},
+                  label: _selectedVaksin == null ? 'Vaksin' : _selectedVaksin!,
+                  onTap: () => _showVaksinModal(),
                 ),
               ),
             ],
@@ -357,5 +362,43 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFFFF6B6B),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _showVaksinModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const JenisVaksinasiModal(),
+    ).then((vaksin) {
+      if (vaksin != null) {
+        setState(() {
+          _selectedVaksin = vaksin;
+        });
+      }
+    });
   }
 }
