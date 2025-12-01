@@ -22,7 +22,7 @@ class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   // gunakan path persis file yang diupload
-  final String headerImageUrl = 'file:///mnt/data/PROFILE PAGE - MAIN.png';
+  final String headerImageUrl = 'assets/images/pet_doctors.png';
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class ProfilePage extends StatelessWidget {
                 end: Alignment(0.9, 0.8),
               ),
               image: DecorationImage(
-                image: NetworkImage(headerImageUrl),
+                image: AssetImage(headerImageUrl),
                 fit: BoxFit.cover,
                 opacity: 0.06, // subtle decorative overlay dari file
               ),

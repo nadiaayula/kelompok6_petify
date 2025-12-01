@@ -8,7 +8,7 @@ class Pet {
   final String breed;
   final String imageUrl;
 
-  Pet({
+  const Pet({
     required this.id,
     required this.name,
     required this.type,

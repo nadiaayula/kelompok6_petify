@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
+import 'features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
+import 'features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +20,6 @@ Future<void> main() async {
   print('Supabase client initialized: ${Supabase.instance.client}');
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -27,7 +30,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-        scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       ),
       home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
