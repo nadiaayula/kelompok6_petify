@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
-      home: const LoginScreen(),
+      home: const MedicalRecordScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

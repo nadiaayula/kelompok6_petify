@@ -65,7 +65,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
               Positioned(
                 top: 60,
                 child: Image.asset(
-                  'assets/pet_doctors.png',
+                  'assets/images/pet_doctors.png',
                   height: 220,
                 ),
               ),
@@ -90,7 +90,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                           height: 64,
                           child: Center(
                             child: Image.asset(
-                              'assets/vaksinasi.png',
+                              'assets/images/vaksinasi.png',
                               width: 48, // ukuran gambar lebih besar
                               height: 48,
                               fit: BoxFit.contain,
@@ -116,7 +116,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                           height: 64,
                           child: Center(
                             child: Image.asset(
-                              'assets/add_medical.png',
+                              'assets/images/add_medical.png',
                               width: 48, // ukuran gambar lebih besar
                               height: 48,
                               fit: BoxFit.contain,
@@ -180,7 +180,7 @@ Padding(
 
               // FILTER ICON (no box)
               Image.asset(
-                'assets/filter.png',
+                'assets/images/filter.png',
                 width: 48,
                 height: 48,
               ),
@@ -206,14 +206,14 @@ SizedBox(height: 20),
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: 'assets/iconkucingmed.png',
+                  icon: 'assets/images/iconkucingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
                 ),
                 _buildMedicalCard(
-                  icon: 'assets/iconkucingmed.png',
+                  icon: 'assets/images/iconkucingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
@@ -232,7 +232,7 @@ SizedBox(height: 20),
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: 'assets/iconanjingmed.png',
+                  icon: 'assets/images/iconanjingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
@@ -252,14 +252,14 @@ SizedBox(height: 20),
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: 'assets/iconkucingmed.png',
+                  icon: 'assets/images/iconkucingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Feline Calicivirus',
                   date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
                   clinic: 'Klinik Sayang Hewan Indonesia',
                 ),
                 _buildMedicalCard(
-                  icon: 'assets/iconanjingmed.png',
+                  icon: 'assets/images/iconanjingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
@@ -286,7 +286,7 @@ SizedBox(height: 20),
                 ),
                 SizedBox(height: 15),
                 _buildMedicalCard(
-                  icon: 'assets/iconanjingmed.png',
+                  icon: 'assets/images/iconanjingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
@@ -294,7 +294,7 @@ SizedBox(height: 20),
                   iconColor: Colors.purple,
                 ),
                 _buildMedicalCard(
-                  icon: 'assets/iconanjingmed.png',
+                  icon: 'assets/images/iconanjingmed.png',
                   iconSize: 64,
                   title: 'Vaksin Parainfluenza',
                   date: 'Jumat, Januar 2024 · 09:45 AM',
