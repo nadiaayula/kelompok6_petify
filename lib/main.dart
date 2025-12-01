@@ -1,16 +1,16 @@
+import 'package:kelompok6_adoptify/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load();
   await Supabase.initialize(
-    url: 'https://cdfcsdwkpkkecssujmxk.supabase.co',
-    anonKey: const String.fromEnvironment('SUPABASE_ANON'),
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON']!,
   );
 
   print('Supabase client initialized: ${Supabase.instance.client}');
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
         scaffoldBackgroundColor: const Color(0xFFFAFAFA),
       ),
-      home: VpmHomeScreen(),
+      home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
