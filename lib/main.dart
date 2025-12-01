@@ -1,3 +1,4 @@
+import 'package:kelompok6_adoptify/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,8 +13,8 @@ Future<void> main() async {
 
   await dotenv.load();
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON'] ?? '',
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON']!,
   );
 
   print('Supabase client initialized: ${Supabase.instance.client}');
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
-      home: const MedicalRecordScreen(),
+      home: const LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
