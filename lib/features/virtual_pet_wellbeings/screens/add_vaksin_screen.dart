@@ -250,7 +250,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: Color(0xFFB7B7B7),
+          color: Colors.black,
         ),
         decoration: InputDecoration(
           hintText: hint,
@@ -305,7 +305,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFFB7B7B7),
+                color: Colors.black,
               ),
               decoration: const InputDecoration(
                 hintText: 'Nomor klinik',

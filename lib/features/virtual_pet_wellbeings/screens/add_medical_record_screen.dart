@@ -316,7 +316,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: Color(0xFFB7B7B7), // ubah warna font ke B7B7B7
+          color: Colors.black, // ubah warna font ke hitam
         ),
         decoration: InputDecoration(
           hintText: hint,
@@ -371,7 +371,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFFB7B7B7), // ubah ke B7B7B7
+                color: Colors.black, // ubah ke hitam
               ),
               decoration: InputDecoration(
                 hintText: 'Nomor telepon',
