@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../common/widgets/calendar_modal.dart';
 import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
@@ -182,7 +183,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   label: _selectedDate == null 
                     ? 'Tanggal' 
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                  onTap: () => _selectDate(context),
+                  onTap: () => _showCalendarModal(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -364,28 +365,22 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  void _showCalendarModal() {
+    showDialog(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFFF6B6B),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const CalendarModal(),
+      ),
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          _selectedDate = date;
+        });
+      }
+    });
   }
 
   void _showVaksinModal() {
