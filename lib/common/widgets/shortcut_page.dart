@@ -7,12 +7,13 @@ class ShortcutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+    return Material(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Center(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Title
               const Text(
@@ -24,7 +25,7 @@ class ShortcutPage extends StatelessWidget {
                 ),
               ),
               
-              const SizedBox(height: 60),
+              const SizedBox(height: 10),
               
               // Virtual Wellbeings Button
               _buildShortcutButton(
@@ -57,42 +58,36 @@ class ShortcutPage extends StatelessWidget {
                 },
               ),
               
-              const SizedBox(height: 40),
-              
-              // Close/Tutup Button (Replaced with old buttons as requested)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                        (Route<dynamic> route) => false,
-                      );
-                    },
-                    child: Image.asset(
-                      'assets/images/bottonhome.png', // Changed
-                      height: 120,
-                      width: 120,
-                      fit: BoxFit.contain,
+              Transform.translate(
+                offset: const Offset(0, -20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center, // Changed to center
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                          (Route<dynamic> route) => false,
+                        );
+                      },
+                      child: Image.asset(
+                        'assets/images/bottonhome.png', // Changed
+                                              height: 150,
+                                              width: 150,                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context); // Close the current dialog
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
-                      );
-                    },
-                    child: Image.asset(
-                      'assets/images/bottontutup.png', // Changed
-                      height: 120,
-                      width: 120,
-                      fit: BoxFit.contain,
+                    const SizedBox(width: 10), // Added spacing
+                    GestureDetector(
+                                          onTap: () {
+                                            Navigator.pop(context); // Close the current dialog and return to previous screen
+                                          },                      child: Image.asset(
+                        'assets/images/bottontutup.png', // Changed
+                                              height: 150,
+                                              width: 150,                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -110,7 +105,7 @@ class ShortcutPage extends StatelessWidget {
       onTap: onTap,
       child: Image.asset(
         imagePath,
-        height: 100, // Reduced height to make section shorter
+        height: 95, // Reduced height to help fit content
         width: null, // Let width scale naturally
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) {

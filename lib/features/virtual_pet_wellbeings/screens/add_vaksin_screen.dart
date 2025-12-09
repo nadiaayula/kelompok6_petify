@@ -78,7 +78,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(32),
                         ),
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 190),
                         child: ShortcutPage(),
                       );
                     },
