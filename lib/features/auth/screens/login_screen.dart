@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/auth/screens/register_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => VpmHomeScreen(),
+              builder: (context) => const DashboardScreen(),
             ),
           );
         }
