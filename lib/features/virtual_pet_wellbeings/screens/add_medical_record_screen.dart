@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../common/widgets/shortcut_page.dart';
 
 class AddMedicalRecordScreen extends StatefulWidget {
   const AddMedicalRecordScreen({Key? key}) : super(key: key);
@@ -66,23 +67,39 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
               ),
               
               // MENU BUTTON
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.menu,
-                  size: 18,
-                  color: Colors.grey,
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 190),
+                        child: const ShortcutPage(),
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.menu,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ],
@@ -316,7 +333,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: Color(0xFFB7B7B7), // ubah warna font ke B7B7B7
+          color: Colors.black, // ubah warna font ke hitam
         ),
         decoration: InputDecoration(
           hintText: hint,
@@ -371,7 +388,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFFB7B7B7), // ubah ke B7B7B7
+                color: Colors.black, // ubah ke hitam
               ),
               decoration: InputDecoration(
                 hintText: 'Nomor telepon',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 
 // 1. PET MODEL
 class Pet {
@@ -33,28 +34,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       name: "Vinc",
       type: "Kucing",
       age: "6 Bulan",
-      imageUrl: "assets/kucing1.png", 
+      imageUrl: "assets/images/kucing1.png", 
     ),
     Pet(
       id: '2',
       name: "Bolu",
       type: "Kucing", 
       age: "1 Tahun",
-      imageUrl: "assets/kucing2.png",
+      imageUrl: "assets/images/kucing2.png",
     ),
     Pet(
       id: '3',
       name: "Beta",
       type: "Kucing",
       age: "8 Bulan", 
-      imageUrl: "assets/anjing1.png",
+      imageUrl: "assets/images/anjing1.png",
     ),
     Pet(
       id: '4',
       name: "Kosmin",
       type: "Kucing",
       age: "2 Tahun",
-      imageUrl: "assets/kucing3.png",
+      imageUrl: "assets/images/kucing3.png",
     )
   ];
 
@@ -159,6 +160,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Medical Dashboard Image
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0), // Space below image
+                      child: Image.asset(
+                        'assets/images/dashboardmedical.png',
+                        fit: BoxFit.contain,
+                        width: double.infinity, // Make it take full width
+                      ),
+                    ),
+                  ),
                   Text(
                     "Checkpoints",
                     style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../common/widgets/calendar_modal.dart';
+import '../../../common/widgets/shortcut_page.dart';
 import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
@@ -67,23 +69,39 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
               ),
               
               // MENU BUTTON
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.menu,
-                  size: 18,
-                  color: Colors.grey,
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(32),
+                        ),
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 190),
+                        child: ShortcutPage(),
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.menu,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ],
@@ -182,7 +200,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   label: _selectedDate == null 
                     ? 'Tanggal' 
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                  onTap: () => _selectDate(context),
+                  onTap: () => _showCalendarModal(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -249,7 +267,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: Color(0xFFB7B7B7),
+          color: Colors.black,
         ),
         decoration: InputDecoration(
           hintText: hint,
@@ -304,7 +322,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFFB7B7B7),
+                color: Colors.black,
               ),
               decoration: const InputDecoration(
                 hintText: 'Nomor klinik',
@@ -364,28 +382,22 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  void _showCalendarModal() {
+    showDialog(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFFF6B6B),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const CalendarModal(),
+      ),
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          _selectedDate = date;
+        });
+      }
+    });
   }
 
   void _showVaksinModal() {
