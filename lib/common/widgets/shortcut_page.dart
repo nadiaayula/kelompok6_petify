@@ -8,127 +8,94 @@ class ShortcutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F8),
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            // Removed 'SHORTCUT PAGE' text as per user request.
-            // Padding(
-            //   padding: const EdgeInsets.all(20),
-            //   child: Text(
-            //     'SHORTCUT PAGE',
-            //     style: TextStyle(
-            //       fontFamily: 'PlusJakartaSans',
-            //       fontSize: 16,
-            //       fontWeight: FontWeight.w600,
-            //       color: Colors.grey[600],
-            //       letterSpacing: 1,
-            //     ),
-            //   ),
-            // ),
-            
-            // Main Content
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                children: [
-                    // Title
-                    const Text(
-                      'Pintasan Fitur',
-                      style: TextStyle(
-                        fontFamily: 'PlusJakartaSans',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Shortcut buttons
-                    _buildShortcutButton(
-                      context,
-                      imagePath: 'assets/images/scvirtual.png',
-                      onTap: () {
-                        // TODO: Navigate to Virtual Wellbeings screen
-                      },
-                    ),
-                    
-                    const SizedBox(height: 0),
-                    
-                    _buildShortcutButton(
-                      context,
-                      imagePath: 'assets/images/scfoster.png',
-                      onTap: () {
-                        // TODO: Navigate to Foster screen
-                      },
-                    ),
-                    
-                    const SizedBox(height: 0),
-                    
-                    _buildShortcutButton(
-                      context,
-                      imagePath: 'assets/images/scmedical.png',
-                      onTap: () {
-                        // TODO: Navigate to Medical Check screen
-                      },
-                    ),
-                    
-                    const Spacer(),
-                    
-                    // Action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                              (Route<dynamic> route) => false,
-                            );
-                          },
-                          child: Image.asset(
-                            'assets/images/buttonhome.png',
-                            height: 60,
-                            width: 60,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pop(context); // Close the current dialog
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
-                            );
-                          },
-                          child: Image.asset(
-                            'assets/images/buttontutup.png',
-                            height: 60,
-                            width: 60,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Column(
+            children: [
+              // Title
+              const Text(
+                'Pintasan Fitur',
+                style: TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 40,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 60),
+              
+              // Virtual Wellbeings Button
+              _buildShortcutButton(
+                context,
+                imagePath: 'assets/images/scvirtual.png',
+                onTap: () {
+                  // TODO: Navigate to Virtual Wellbeings screen
+                },
+              ),
+              
+              const SizedBox(height: 0),
+              
+              // Foster Button
+              _buildShortcutButton(
+                context,
+                imagePath: 'assets/images/scfoster.png',
+                onTap: () {
+                  // TODO: Navigate to Foster screen
+                },
+              ),
+              
+              const SizedBox(height: 0),
+              
+              // Medical Check Button
+              _buildShortcutButton(
+                context,
+                imagePath: 'assets/images/scmedical.png',
+                onTap: () {
+                  // TODO: Navigate to Medical Check screen
+                },
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Close/Tutup Button (Replaced with old buttons as requested)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                        (Route<dynamic> route) => false,
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/bottonhome.png', // Changed
+                      height: 120,
+                      width: 120,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context); // Close the current dialog
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/images/bottontutup.png', // Changed
+                      height: 120,
+                      width: 120,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -141,37 +108,27 @@ class ShortcutPage extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.zero, // Remove padding to bring images closer
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              imagePath,
-              height: 250, // Increase image size
-              width: 250, // Increase image size
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  height: 250,
-                  width: 250,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    size: 80,
-                    color: Colors.white,
-                  ),
-                );
-              },
+      child: Image.asset(
+        imagePath,
+        height: 100, // Reduced height to make section shorter
+        width: null, // Let width scale naturally
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          // Placeholder jika image tidak ada
+          return Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(20),
             ),
-          ],
-        ),
+            child: const Icon(
+              Icons.pets,
+              size: 60,
+              color: Colors.white,
+            ),
+          );
+        },
       ),
     );
   }

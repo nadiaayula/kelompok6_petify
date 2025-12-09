@@ -64,17 +64,22 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
               // Positioned Image pet_doctors (tidak clickable lagi)
               Positioned(
                 top: 60,
+                left: 0,
+                right: 0,
                 child: Image.asset(
                   'assets/images/pet_doctors.png',
                   height: 220,
+                  fit: BoxFit.contain, // Changed from fitWidth to contain to prevent cropping
                 ),
               ),
               
               // Add New Buttons (vaksinasi + tambah medical) di atas pet_doctors
               Positioned(
                 top: 150, // sesuaikan untuk posisi vertikal
-                right: 40, // sesuaikan untuk posisi horizontal
+                left: 0, // Occupy full width for responsiveness
+                right: 0, // Occupy full width for responsiveness
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end, // Push buttons to the right
                   children: [
                     Material(
                       color: Colors.transparent,
@@ -100,7 +105,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                       ),
                     ),
 
-                    const SizedBox(width: 8), // jarak lebih rapat
+
 
                     Material(
                       color: Colors.transparent,
@@ -125,6 +130,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(width: 60), // Add right padding to match original 'right: 40'
                   ],
                 ),
               ),
