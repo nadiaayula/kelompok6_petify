@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 import 'add_medical_record_screen.dart';
 import 'add_vaksin_screen.dart';
 import 'dashboard_screen.dart';
@@ -145,20 +146,27 @@ Padding(
   padding: const EdgeInsets.symmetric(horizontal: 20.0),
   child: Row(
     children: [
-      // BACK BUTTON WITH BOX
-      Container(
-        padding: EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10), // kotak rounded
-        ),
-        child: Icon(
-          Icons.arrow_back_ios,
-          size: 18,
-          color: Colors.black87,
-        ),
-      ),
-      
+                    // BACK BUTTON WITH BOX
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                        );
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10), // kotak rounded
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          size: 18,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),      
       SizedBox(width: 15),
 
       // SEARCH BAR
