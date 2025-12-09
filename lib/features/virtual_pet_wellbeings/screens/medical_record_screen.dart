@@ -315,10 +315,31 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
         SizedBox(width: 15),
   
                 // FILTER ICON (no box)
-                Image.asset(
-                  'assets/images/filter.png',
-                  width: 48,
-                  height: 48,
+                PopupMenuButton<String>(
+                  onSelected: (String value) {
+                    setState(() {
+                      _animalFilter = value;
+                    });
+                  },
+                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    const PopupMenuItem<String>(
+                      value: 'all',
+                      child: Text('Semua'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'kucing',
+                      child: Text('Kucing'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'anjing',
+                      child: Text('Anjing'),
+                    ),
+                  ],
+                  child: Image.asset(
+                    'assets/images/filter.png',
+                    width: 48,
+                    height: 48,
+                  ),
                 ),
               ],
             ),
