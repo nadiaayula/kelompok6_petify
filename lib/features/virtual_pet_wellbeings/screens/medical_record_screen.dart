@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_vaksin_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
 
 // 1. DATA MODEL
 class MedicalRecord {
@@ -7,6 +9,7 @@ class MedicalRecord {
   final String title;
   final String date;
   final String clinic;
+  final String animalType; // Added for filtering
   final Color? iconColor;
 
   MedicalRecord({
@@ -14,6 +17,7 @@ class MedicalRecord {
     required this.title,
     required this.date,
     required this.clinic,
+    required this.animalType,
     this.iconColor,
   });
 }
@@ -28,6 +32,7 @@ class MedicalRecordScreen extends StatefulWidget {
 class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
   late TextEditingController _searchController;
   String _searchQuery = '';
+  String _animalFilter = 'all'; // 'all', 'kucing', 'anjing'
 
   // 2. DATA SOURCE
   final List<MedicalRecord> _allRecords = [
@@ -37,12 +42,14 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Vaksin Feline Calicivirus',
       date: 'Kemarin · 12:43 PM',
       clinic: 'Klinik Sayang Hewan Indonesia',
+      animalType: 'kucing',
     ),
     MedicalRecord(
       icon: 'assets/images/iconkucingmed.png',
       title: 'Pemeriksaan Rutin Kucing',
       date: 'Kemarin · 15:00 PM',
       clinic: 'Klinik Sayang Hewan Indonesia',
+      animalType: 'kucing',
     ),
     // Sabtu, 22 Maret 2024
     MedicalRecord(
@@ -50,6 +57,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Vaksin Parainfluenza',
       date: 'Sabtu, 22 Maret 2024 · 09:45 AM',
       clinic: 'Klinik Peduli Anabul Indonesia',
+      animalType: 'anjing',
       iconColor: Colors.purple,
     ),
     // Jumat, 21 Maret 2024
@@ -58,6 +66,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Operasi Sterilisasi',
       date: 'Jumat, 21 Maret 2024 · 12:43 PM',
       clinic: 'Klinik Sayang Hewan Indonesia',
+      animalType: 'kucing',
     ),
     // Rabu, 20 Maret 2024
     MedicalRecord(
@@ -65,6 +74,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Pemeriksaan Gigi Anjing',
       date: 'Rabu, 20 Maret 2024 · 10:00 AM',
       clinic: 'Klinik Sehat Pet',
+      animalType: 'anjing',
       iconColor: Colors.purple,
     ),
     MedicalRecord(
@@ -72,6 +82,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Konsultasi Gizi',
       date: 'Rabu, 20 Maret 2024 · 11:30 AM',
       clinic: 'Klinik Sehat Pet',
+      animalType: 'kucing',
     ),
     // Senin, 18 Maret 2024
     MedicalRecord(
@@ -79,6 +90,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Vaksin Rabies Anjing',
       date: 'Senin, 18 Maret 2024 · 02:00 PM',
       clinic: 'Klinik Peduli Anabul Indonesia',
+      animalType: 'anjing',
       iconColor: Colors.purple,
     ),
     MedicalRecord(
@@ -86,6 +98,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       title: 'Perawatan Kutu',
       date: 'Senin, 18 Maret 2024 · 03:15 PM',
       clinic: 'Klinik Sayang Hewan Indonesia',
+      animalType: 'kucing',
     ),
   ];
 
@@ -112,25 +125,29 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     final List<MedicalRecord> filteredRecords = _allRecords.where((record) {
       final titleLower = record.title.toLowerCase();
       final searchQueryLower = _searchQuery.toLowerCase();
-      return titleLower.contains(searchQueryLower);
+      final typeMatches = _animalFilter == 'all' || record.animalType == _animalFilter;
+      return titleLower.contains(searchQueryLower) && typeMatches;
     }).toList();
 
     // 4. GROUPING AND BUILDING LIST ITEMS
     List<dynamic> listItems = [];
     if (_searchQuery.isEmpty) {
-      listItems.add("Kemarin");
-      listItems.add(_allRecords[0]);
-      listItems.add(_allRecords[1]);
-      listItems.add("Sabtu, 22 Maret 2024");
-      listItems.add(_allRecords[2]);
-      listItems.add("Jumat, 21 Maret 2024");
-      listItems.add(_allRecords[3]);
-      listItems.add("Rabu, 20 Maret 2024");
-      listItems.add(_allRecords[4]);
-      listItems.add(_allRecords[5]);
-      listItems.add("Senin, 18 Maret 2024");
-      listItems.add(_allRecords[6]);
-      listItems.add(_allRecords[7]);
+      Map<String, List<MedicalRecord>> groupedRecords = {};
+      for (var record in filteredRecords) {
+        // Simple date part extraction for grouping.
+        String datePart = record.date.split('·')[0].trim();
+        if (groupedRecords.containsKey(datePart)) {
+          groupedRecords[datePart]!.add(record);
+        } else {
+          groupedRecords[datePart] = [record];
+        }
+      }
+      
+      groupedRecords.forEach((date, records) {
+        listItems.add(date);
+        listItems.addAll(records);
+      });
+
     } else {
       listItems.addAll(filteredRecords);
     }
@@ -192,9 +209,9 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            // Navigator.of(context).push(
-                            //   MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
-                            // );
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
+                            );
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(
@@ -218,9 +235,9 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: () {
-                            // Navigator.of(context).push(
-                            //   MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
-                            // );
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
+                            );
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(
