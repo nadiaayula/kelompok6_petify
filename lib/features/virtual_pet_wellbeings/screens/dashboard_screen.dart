@@ -324,7 +324,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Switch(
                 value: true, 
                 onChanged: (val) {}, 
-                activeColor: const Color(0xFFFF9F1C),
+                activeThumbColor: const Color(0xFFFF9F1C),
               ),
             ],
           )

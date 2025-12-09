@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RewardsPage extends StatefulWidget {
-  const RewardsPage({Key? key}) : super(key: key);
+  const RewardsPage({super.key});
 
   @override
   State<RewardsPage> createState() => _RewardsPageState();

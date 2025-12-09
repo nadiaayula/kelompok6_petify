@@ -48,6 +48,8 @@ class VpmHomeScreen extends StatelessWidget {
     ),
   ];
 
+  const VpmHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
