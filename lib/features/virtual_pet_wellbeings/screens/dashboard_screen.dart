@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 
 // 1. PET MODEL
 class Pet {
@@ -159,6 +160,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Medical Dashboard Image
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0), // Space below image
+                      child: Image.asset(
+                        'assets/images/dashboardmedical.png',
+                        fit: BoxFit.contain,
+                        width: double.infinity, // Make it take full width
+                      ),
+                    ),
+                  ),
                   Text(
                     "Checkpoints",
                     style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold),
