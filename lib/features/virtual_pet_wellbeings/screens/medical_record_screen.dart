@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
-import 'add_medical_record_screen.dart';
-import 'add_vaksin_screen.dart';
-import 'dashboard_screen.dart';
+
+// 1. DATA MODEL
+class MedicalRecord {
+  final String icon;
+  final String title;
+  final String date;
+  final String clinic;
+  final Color? iconColor;
+
+  MedicalRecord({
+    required this.icon,
+    required this.title,
+    required this.date,
+    required this.clinic,
+    this.iconColor,
+  });
+}
 
 class MedicalRecordScreen extends StatefulWidget {
   const MedicalRecordScreen({super.key});
@@ -15,10 +29,75 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
   late TextEditingController _searchController;
   String _searchQuery = '';
 
+  // 2. DATA SOURCE
+  final List<MedicalRecord> _allRecords = [
+    // Kemarin
+    MedicalRecord(
+      icon: 'assets/images/iconkucingmed.png',
+      title: 'Vaksin Feline Calicivirus',
+      date: 'Kemarin · 12:43 PM',
+      clinic: 'Klinik Sayang Hewan Indonesia',
+    ),
+    MedicalRecord(
+      icon: 'assets/images/iconkucingmed.png',
+      title: 'Pemeriksaan Rutin Kucing',
+      date: 'Kemarin · 15:00 PM',
+      clinic: 'Klinik Sayang Hewan Indonesia',
+    ),
+    // Sabtu, 22 Maret 2024
+    MedicalRecord(
+      icon: 'assets/images/iconanjingmed.png',
+      title: 'Vaksin Parainfluenza',
+      date: 'Sabtu, 22 Maret 2024 · 09:45 AM',
+      clinic: 'Klinik Peduli Anabul Indonesia',
+      iconColor: Colors.purple,
+    ),
+    // Jumat, 21 Maret 2024
+    MedicalRecord(
+      icon: 'assets/images/iconkucingmed.png',
+      title: 'Operasi Sterilisasi',
+      date: 'Jumat, 21 Maret 2024 · 12:43 PM',
+      clinic: 'Klinik Sayang Hewan Indonesia',
+    ),
+    // Rabu, 20 Maret 2024
+    MedicalRecord(
+      icon: 'assets/images/iconanjingmed.png',
+      title: 'Pemeriksaan Gigi Anjing',
+      date: 'Rabu, 20 Maret 2024 · 10:00 AM',
+      clinic: 'Klinik Sehat Pet',
+      iconColor: Colors.purple,
+    ),
+    MedicalRecord(
+      icon: 'assets/images/iconkucingmed.png',
+      title: 'Konsultasi Gizi',
+      date: 'Rabu, 20 Maret 2024 · 11:30 AM',
+      clinic: 'Klinik Sehat Pet',
+    ),
+    // Senin, 18 Maret 2024
+    MedicalRecord(
+      icon: 'assets/images/iconanjingmed.png',
+      title: 'Vaksin Rabies Anjing',
+      date: 'Senin, 18 Maret 2024 · 02:00 PM',
+      clinic: 'Klinik Peduli Anabul Indonesia',
+      iconColor: Colors.purple,
+    ),
+    MedicalRecord(
+      icon: 'assets/images/iconkucingmed.png',
+      title: 'Perawatan Kutu',
+      date: 'Senin, 18 Maret 2024 · 03:15 PM',
+      clinic: 'Klinik Sayang Hewan Indonesia',
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
   }
 
   @override
@@ -29,319 +108,246 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              // Pink Header Background
-              Container(
-                height: 180, // Defines the height of the pink area
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFFFF9A9A), Color(0xFFFF7B7B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-              
-              // Positioned Title
-              Positioned(
-                top: 70, // Moved down a bit
-                child: Text(
-                  'Medical Record',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              
-              // Positioned Image pet_doctors (tidak clickable lagi)
-              Positioned(
-                top: 60,
-                left: 0,
-                right: 0,
-                child: Image.asset(
-                  'assets/images/pet_doctors.png',
-                  height: 220,
-                  fit: BoxFit.contain, // Changed from fitWidth to contain to prevent cropping
-                ),
-              ),
-              
-              // Add New Buttons (vaksinasi + tambah medical) di atas pet_doctors
-              Positioned(
-                top: 150, // sesuaikan untuk posisi vertikal
-                left: 0, // Occupy full width for responsiveness
-                right: 0, // Occupy full width for responsiveness
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end, // Push buttons to the right
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          width: 64, // area tap lebih besar
-                          height: 64,
-                          child: Center(
-                            child: Image.asset(
-                              'assets/images/vaksinasi.png',
-                              width: 48, // ukuran gambar lebih besar
-                              height: 48,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
+    // 3. FILTERING LOGIC
+    final List<MedicalRecord> filteredRecords = _allRecords.where((record) {
+      final titleLower = record.title.toLowerCase();
+      final searchQueryLower = _searchQuery.toLowerCase();
+      return titleLower.contains(searchQueryLower);
+    }).toList();
+
+    // 4. GROUPING AND BUILDING LIST ITEMS
+    List<dynamic> listItems = [];
+    if (_searchQuery.isEmpty) {
+      listItems.add("Kemarin");
+      listItems.add(_allRecords[0]);
+      listItems.add(_allRecords[1]);
+      listItems.add("Sabtu, 22 Maret 2024");
+      listItems.add(_allRecords[2]);
+      listItems.add("Jumat, 21 Maret 2024");
+      listItems.add(_allRecords[3]);
+      listItems.add("Rabu, 20 Maret 2024");
+      listItems.add(_allRecords[4]);
+      listItems.add(_allRecords[5]);
+      listItems.add("Senin, 18 Maret 2024");
+      listItems.add(_allRecords[6]);
+      listItems.add(_allRecords[7]);
+    } else {
+      listItems.addAll(filteredRecords);
+    }
 
 
-
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          width: 64, // area tap lebih besar
-                          height: 64,
-                          child: Center(
-                            child: Image.asset(
-                              'assets/images/add_medical.png',
-                              width: 48, // ukuran gambar lebih besar
-                              height: 48,
-                              fit: BoxFit.contain,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 60), // Add right padding to match original 'right: 40'
-                  ],
-                ),
-              ),
-            ],
-          ),
-          
-          // Spacer to push content down, avoiding overlap with the image
-          SizedBox(height: 80), 
-
-          // Search Bar
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-  child: Row(
-    children: [
-                    // BACK BUTTON WITH BOX
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                        );
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10), // kotak rounded
-                        ),
-                        child: Icon(
-                          Icons.arrow_back_ios,
-                          size: 18,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),      
-      SizedBox(width: 15),
-
-      // SEARCH BAR
-      Expanded(
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'Penelusuran',
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-              Spacer(),
-              Icon(Icons.search, color: Colors.orange),
-            ],
-          ),
-        ),
-      ),
-
-      SizedBox(width: 15),
-
-              // FILTER ICON (no box)
-              Image.asset(
-                'assets/images/filter.png',
-                width: 48,
-                height: 48,
-              ),
-            ],
-          ),
-        ),
-
-SizedBox(height: 20),
-
-          
-          // Medical Records List
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+    return Scaffold(        backgroundColor: Colors.grey[50],
+        body: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
-                // Kemarin Section
-                Text(
-                  'Kemarin',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Pink Header Background
+                Container(
+                  height: 180, // Defines the height of the pink area
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF9A9A), Color(0xFFFF7B7B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                   ),
                 ),
-                SizedBox(height: 15),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconkucingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Feline Calicivirus',
-                  date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
-                  clinic: 'Klinik Sayang Hewan Indonesia',
-                ),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconkucingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Feline Calicivirus',
-                  date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
-                  clinic: 'Klinik Sayang Hewan Indonesia',
-                ),
                 
-                SizedBox(height: 20),
-                
-                // Sabtu, 22 Maret 2024 Section
-                Text(
-                  'Sabtu, 22 Maret 2024',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Positioned Title
+                Positioned(
+                  top: 70, // Moved down a bit
+                  child: Text(
+                    'Medical Record',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                SizedBox(height: 15),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconanjingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Parainfluenza',
-                  date: 'Jumat, 14 Januari 2024 · 09:45 AM',
-                  clinic: 'Klinik Peduli Anabul Indonesia',
-                  iconColor: Colors.purple,
-                ),
                 
-                SizedBox(height: 20),
-                
-                // Jumat, 21 Maret 2024 Section
-                Text(
-                  'Jumat, 21 Maret 2024',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Positioned Image pet_doctors (tidak clickable lagi)
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Image.asset(
+                    'assets/images/pet_doctors.png',
+                    height: 220,
+                    fit: BoxFit.contain, // Changed from fitWidth to contain to prevent cropping
                   ),
                 ),
-                SizedBox(height: 15),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconkucingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Feline Calicivirus',
-                  date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
-                  clinic: 'Klinik Sayang Hewan Indonesia',
-                ),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconanjingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Parainfluenza',
-                  date: 'Jumat, 14 Januari 2024 · 09:45 AM',
-                  clinic: 'Klinik Peduli Anabul Indonesia',
-                  iconColor: Colors.purple,
-                ),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconkucingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Feline Calicivirus',
-                  date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
-                  clinic: 'Klinik Sayang Hewan Indonesia',
-                ),
                 
-                SizedBox(height: 20),
-                
-                // Another Jumat, 21 Maret 2024 Section
-                Text(
-                  'Jumat, 21 Maret 2024',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // Add New Buttons (vaksinasi + tambah medical) di atas pet_doctors
+                Positioned(
+                  top: 150, // sesuaikan untuk posisi vertikal
+                  left: 0, // Occupy full width for responsiveness
+                  right: 0, // Occupy full width for responsiveness
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end, // Push buttons to the right
+                    children: [
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            // Navigator.of(context).push(
+                            //   MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
+                            // );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            width: 64, // area tap lebih besar
+                            height: 64,
+                            child: Center(
+                              child: Image.asset(
+                                'assets/images/vaksinasi.png',
+                                width: 48, // ukuran gambar lebih besar
+                                height: 48,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+  
+  
+  
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            // Navigator.of(context).push(
+                            //   MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
+                            // );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            width: 64, // area tap lebih besar
+                            height: 64,
+                            child: Center(
+                              child: Image.asset(
+                                'assets/images/add_medical.png',
+                                width: 48, // ukuran gambar lebih besar
+                                height: 48,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 60), // Add right padding to match original 'right: 40'
+                    ],
                   ),
                 ),
-                SizedBox(height: 15),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconanjingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Parainfluenza',
-                  date: 'Jumat, 15 Januari 2024 · 09:45 AM',
-                  clinic: 'Klinik Peduli Anabul Indonesia',
-                  iconColor: Colors.purple,
+              ],
+            ),
+            
+            // Spacer to push content down, avoiding overlap with the image
+            SizedBox(height: 80), 
+  
+            // Search Bar
+  Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+    child: Row(
+      children: [
+                      // BACK BUTTON WITH BOX
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10), // kotak rounded
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios,
+                            size: 18,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+        SizedBox(width: 15),
+  
+        // SEARCH BAR
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Penelusuran',
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                border: InputBorder.none,
+                prefixIcon: Icon(Icons.search, color: Colors.orange),
+                contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 15),
+              ),
+            ),
+          ),
+        ),
+  
+        SizedBox(width: 15),
+  
+                // FILTER ICON (no box)
+                Image.asset(
+                  'assets/images/filter.png',
+                  width: 48,
+                  height: 48,
                 ),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconanjingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Parainfluenza',
-                  date: 'Jumat, 15 Januari 2024 · 09:45 AM',
-                  clinic: 'Klinik Peduli Anabul Indonesia',
-                  iconColor: Colors.purple,
-                ),
-                
-                SizedBox(height: 20),
-                
-                Text(
-                  'Jumat, 21 Maret 2024',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 15),
-                _buildMedicalCard(
-                  icon: 'assets/images/iconkucingmed.png',
-                  iconSize: 64,
-                  title: 'Vaksin Feline Calicivirus',
-                  date: 'Sabtu, 4 Maret 2024 · 12:43 PM',
-                  clinic: 'Klinik Sayang Hewan Indonesia',
-                ),
-                SizedBox(height: 20),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
   
+  SizedBox(height: 20),
+  
+            
+            // Medical Records List
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                itemCount: listItems.length,
+                itemBuilder: (context, index) {
+                  final item = listItems[index];
+                  if (item is String) {
+                    // Build a date header
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 15.0, bottom: 15.0),
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    );
+                  } else if (item is MedicalRecord) {
+                    // Build a medical card
+                    return _buildMedicalCard(
+                      icon: item.icon,
+                      iconSize: 64,
+                      title: item.title,
+                      date: item.date,
+                      clinic: item.clinic,
+                      iconColor: item.iconColor,
+                    );
+                  }
+                  return const SizedBox.shrink(); // Should not happen
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }  
   Widget _buildMedicalCard({
     required String icon,
     double iconSize = 35,
