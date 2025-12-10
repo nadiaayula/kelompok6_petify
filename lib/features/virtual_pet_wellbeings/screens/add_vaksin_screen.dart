@@ -22,18 +22,24 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   final _medicalNotesController = TextEditingController();
   final _clinicNameController = TextEditingController();
   final _doctorNameController = TextEditingController();
-  final _clinicPhoneController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchPets();
   }
+  
+  @override
+  void dispose() {
+    _medicalNotesController.dispose();
+    _clinicNameController.dispose();
+    _doctorNameController.dispose();
+    super.dispose();
+  }
 
   Future<void> _fetchPets() async {
     try {
       final userId = Supabase.instance.client.auth.currentUser?.id;
-      print('Fetching pets for user ID: $userId'); // Debug print
       if (userId == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -46,27 +52,15 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           .select('id, name')
           .eq('owner_id', userId);
       
-      print('Supabase response: $response'); // Debug print
-
       setState(() {
         _pets = List<Map<String, dynamic>>.from(response);
       });
     } catch (e) {
-      print('Error fetching pets: $e'); // Debug print
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal memuat peliharaan: $e')),
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _medicalNotesController.dispose();
-    _clinicNameController.dispose();
-    _doctorNameController.dispose();
-    _clinicPhoneController.dispose();
-    super.dispose();
   }
 
   @override
@@ -204,10 +198,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           _buildTextField(hint: 'Nama Klinik', controller: _clinicNameController),
           const SizedBox(height: 12),
           
-          _buildTextField(hint: 'Nama dokter atau perawat', controller: _doctorNameController),
-          const SizedBox(height: 12),
-
-          _buildPhoneField(),
+          _buildTextField(hint: 'Nama Dokter', controller: _doctorNameController),
           const SizedBox(height: 25),
           
           Row(
@@ -297,22 +288,17 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     });
 
     try {
-      // Step 1: Get or Insert Clinic ID
-      final clinicId = await _getOrInsertClinicId();
-      if (clinicId == null && _clinicNameController.text.isNotEmpty) {
-        throw Exception('Gagal membuat atau menemukan klinik.');
-      }
-
-      // Step 2: Prepare Vaccination Record
+      // Step 1: Prepare Vaccination Record
       final vaccinationRecord = {
         'pet_id': _selectedPetId,
         'vaccination_date': _selectedDate!.toIso8601String(),
         'vaccine_name': _selectedVaksin,
         'medical_notes': _medicalNotesController.text,
-        'clinic_id': clinicId, // Use the obtained clinic_id
+        'clinic_name': _clinicNameController.text.trim(),
+        'doctor_name': _doctorNameController.text.trim(),
       };
 
-      // Step 3: Insert Vaccination Record
+      // Step 2: Insert Vaccination Record
       await Supabase.instance.client.from('vaccination_records').insert(vaccinationRecord);
 
       if (!mounted) return;
@@ -332,46 +318,6 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  Future<String?> _getOrInsertClinicId() async {
-    final clinicName = _clinicNameController.text.trim();
-    final doctorName = _doctorNameController.text.trim();
-    final clinicPhone = _clinicPhoneController.text.trim();
-
-    if (clinicName.isEmpty) {
-      return null;
-    }
-
-    try {
-      // Check if clinic exists
-      final response = await Supabase.instance.client
-          .from('clinics')
-          .select('id')
-          .eq('name', clinicName)
-          .limit(1);
-
-      if (response.isNotEmpty) {
-        return response[0]['id'] as String;
-      } else {
-        // Insert new clinic
-        final newClinic = {
-          'name': clinicName,
-          'doctor_name': doctorName.isNotEmpty ? doctorName : null,
-          'phone': clinicPhone.isNotEmpty ? clinicPhone : null,
-        };
-        final insertResponse = await Supabase.instance.client
-            .from('clinics')
-            .insert(newClinic)
-            .select('id')
-            .single();
-        
-        return insertResponse['id'] as String;
-      }
-    } catch (e) {
-      print('Error in _getOrInsertClinicId: $e');
-      return null;
     }
   }
 
@@ -413,61 +359,6 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             vertical: 16,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildPhoneField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // tetap putih
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  _selectedCountryCode,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TextField(
-              controller: _clinicPhoneController,
-              style: const TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.black, // ubah ke hitam
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Nomor klinik',
-                hintStyle: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 0,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

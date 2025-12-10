@@ -15,21 +15,20 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   List<Map<String, dynamic>> _pets = [];
   String? _selectedPetId;
   bool _hasXray = false;
-  String _selectedCountryCode = '🇮🇩';
-  List<Map<String, dynamic>> _clinics = [];
-  Map<String, dynamic>? _selectedClinic;
 
   final _healthConditionController = TextEditingController();
   final _weightController = TextEditingController();
   final _healthHistoryController = TextEditingController();
   final _additionalInfoController = TextEditingController();
   final _medicalNotesController = TextEditingController();
+  final _clinicNameController = TextEditingController(); // Controller for clinic name
+  final _doctorNameController = TextEditingController(); // Controller for doctor name
 
   @override
   void initState() {
     super.initState();
     _fetchPets();
-    _fetchClinics();
+    // _fetchClinics(); // No longer needed
   }
 
   @override
@@ -39,9 +38,39 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     _healthHistoryController.dispose();
     _additionalInfoController.dispose();
     _medicalNotesController.dispose();
+    _clinicNameController.dispose(); // Dispose the new controller
+    _doctorNameController.dispose(); // Dispose the doctor name controller
     super.dispose();
   }
 
+  Future<void> _fetchPets() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat memuat peliharaan: Pengguna tidak login.')),
+        );
+        return;
+      }
+      final response = await Supabase.instance.client
+          .from('pets')
+          .select('id, name')
+          .eq('owner_id', userId);
+      
+      setState(() {
+        _pets = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat peliharaan: $e')),
+      );
+    }
+  }
+
+  // _fetchClinics() is no longer needed
+  /*
   Future<void> _fetchClinics() async {
     try {
       final response = await Supabase.instance.client.from('clinics').select();
@@ -56,6 +85,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       );
     }
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -254,93 +284,9 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           
           
           
-                    DropdownButtonFormField<Map<String, dynamic>>(
-          
-                      value: _selectedClinic,
-          
-                      hint: const Text('Pilih Klinik'),
-          
-                      onChanged: (Map<String, dynamic>? newValue) {
-          
-                        setState(() {
-          
-                          _selectedClinic = newValue;
-          
-                        });
-          
-                      },
-          
-                      items: _clinics.map<DropdownMenuItem<Map<String, dynamic>>>((Map<String, dynamic> clinic) {
-          
-                        return DropdownMenuItem<Map<String, dynamic>>(
-          
-                          value: clinic,
-          
-                          child: Text(clinic['name']),
-          
-                        );
-          
-                      }).toList(),
-          
-                      decoration: InputDecoration(
-          
-                        filled: true,
-          
-                        fillColor: Colors.white,
-          
-                        border: OutlineInputBorder(
-          
-                          borderRadius: BorderRadius.circular(12),
-          
-                          borderSide: BorderSide.none,
-          
-                        ),
-          
-                      ),
-          
-                    ),
-          
-          
-          
-                    if (_selectedClinic != null) ...[
-          
-                      const SizedBox(height: 12),
-          
-                      Container(
-          
-                        padding: const EdgeInsets.all(12),
-          
-                        decoration: BoxDecoration(
-          
-                          color: Colors.white,
-          
-                          borderRadius: BorderRadius.circular(12),
-          
-                        ),
-          
-                        child: Column(
-          
-                          crossAxisAlignment: CrossAxisAlignment.start,
-          
-                          children: [
-          
-                            Text('Dokter: ${_selectedClinic!['doctor_name'] ?? '-'}'),
-          
-                            const SizedBox(height: 4),
-          
-                            Text('Telepon: ${_selectedClinic!['phone'] ?? '-'}'),
-          
-                          ],
-          
-                        ),
-          
-                      )
-          
-                    ],
-          
-                    
-          
-                    const SizedBox(height: 12),
+                    _buildTextField(hint: 'Nama Klinik', controller: _clinicNameController),
+          const SizedBox(height: 12),
+          _buildTextField(hint: 'Nama Dokter', controller: _doctorNameController),
           
           Row(
             children: [
@@ -422,9 +368,9 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       );
       return;
     }
-    if (_selectedClinic == null) {
+    if (_clinicNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Silakan pilih klinik.')),
+        const SnackBar(content: Text('Silakan masukkan nama klinik.')),
       );
       return;
     }
@@ -447,7 +393,8 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
         'pet_weight_kg': double.tryParse(_weightController.text),
         'has_xray': _hasXray,
         'medical_notes': combinedNotes,
-        'clinic_id': _selectedClinic!['id'], // Use the selected clinic's ID
+        'clinic_name': _clinicNameController.text.trim(),
+        'doctor_name': _doctorNameController.text.trim(),
       };
 
       await Supabase.instance.client.from('medical_records').insert(medicalRecord);
