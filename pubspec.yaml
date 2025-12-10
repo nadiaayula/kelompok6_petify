@@ -9,9 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   google_fonts: ^4.0.0
   flutter_dotenv: ^5.1.0
   supabase_flutter: ^2.10.3
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:
