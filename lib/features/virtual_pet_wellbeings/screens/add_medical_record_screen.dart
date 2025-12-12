@@ -42,6 +42,28 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     super.dispose();
   }
 
+  Future<void> _fetchPets() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final response = await Supabase.instance.client
+          .from('pets')
+          .select()
+          .eq('owner_id', userId);
+      
+      setState(() {
+        _pets = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching pets: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data peliharaan: $e')),
+      );
+    }
+  }
+
   Future<void> _fetchClinics() async {
     try {
       final response = await Supabase.instance.client.from('clinics').select();
