@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../rewards/screens/rewards_page.dart';
+import '../../history/history_page.dart';
 import '../widgets/pet_card.dart';
 import '../models/pet_model.dart';
 
 class VpmHomeScreen extends StatelessWidget {
-  final List<Pet> pets = [
-    Pet(
+  static const List<Pet> pets = [
+    const Pet(
       id: '1',
-      name: "VINC",
+      name: "Vinc",
       type: "Kucing",
       age: "6 Bulan",
       weight: "2.5 Kg",
@@ -15,9 +17,9 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Angora",
       imageUrl: "assets/cat1.png",
     ),
-    Pet(
+    const Pet(
       id: '2',
-      name: "Umar",
+      name: "Bolu",
       type: "Kucing", 
       age: "1 Tahun",
       weight: "3.2 Kg",
@@ -25,7 +27,7 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Persian",
       imageUrl: "assets/cat2.png",
     ),
-    Pet(
+    const Pet(
       id: '3',
       name: "Beta",
       type: "Kucing",
@@ -35,7 +37,7 @@ class VpmHomeScreen extends StatelessWidget {
       breed: "Siamese",
       imageUrl: "assets/cat3.png",
     ),
-    Pet(
+    const Pet(
       id: '4',
       name: "Kosmin",
       type: "Kucing",
@@ -47,6 +49,8 @@ class VpmHomeScreen extends StatelessWidget {
     ),
   ];
 
+  const VpmHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +59,6 @@ class VpmHomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -73,15 +76,37 @@ class VpmHomeScreen extends StatelessWidget {
                       color: Colors.black,
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.menu, color: Colors.black),
-                    onPressed: () {},
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.history, color: Colors.black),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HistoryPage(filter: HistoryFilter.all
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.card_giftcard, color: Colors.black),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RewardsPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
             
-            // Wellbeings Title
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
@@ -94,7 +119,6 @@ class VpmHomeScreen extends StatelessWidget {
               ),
             ),
             
-            // Pet Count
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
@@ -107,7 +131,6 @@ class VpmHomeScreen extends StatelessWidget {
               ),
             ),
             
-            // Pet Grid
             Expanded(
               child: GridView.builder(
                 padding: EdgeInsets.all(16),
@@ -122,7 +145,6 @@ class VpmHomeScreen extends StatelessWidget {
                   return PetCard(
                     pet: pets[index],
                     onTap: () {
-                      // Akan diisi nanti untuk navigation ke detail
                       print('Tapped on ${pets[index].name}');
                     },
                   );
@@ -133,10 +155,8 @@ class VpmHomeScreen extends StatelessWidget {
         ),
       ),
       
-      // Floating Action Button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Akan diisi nanti untuk tambah pet baru
           print('Add new pet');
         },
         backgroundColor: Colors.orange,
