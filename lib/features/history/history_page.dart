@@ -40,7 +40,7 @@ final List<HistoryData> historyList = [
     points: 200,
     time: "12.58",
     date: "Kemarin",
-    asset: "assets/kucing1.png",
+    asset: "assets/images/kucing1.png",
   ),
   HistoryData(
     type: "cek_kesehatan",
