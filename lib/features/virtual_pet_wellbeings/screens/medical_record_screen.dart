@@ -2,23 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_vaksin_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 // 1. DATA MODEL
 class MedicalRecord {
-  final String icon;
+  final String id;
+  final String petId;
+  final String petName; // From pets table
+  final String petSpecies; // From pets table, for filtering
+  final String? petImageUrl; // From pets table
   final String title;
-  final String date;
-  final String clinic;
-  final String animalType; // Added for filtering
-  final Color? iconColor;
+  final DateTime recordDate; // Changed from String date to DateTime
+  final String? clinicName; // From medical_records
+  final String? doctorName; // From medical_records
+  final String recordType; // 'medical' or 'vaccination'
+  final String? medicalNotes;
+  final String? healthCondition; // From medical_records
+  final double? petWeightKg; // From medical_records
+  final bool? hasXray; // From medical_records
+  final String? vaccineName; // From vaccination_records
 
   MedicalRecord({
-    required this.icon,
+    required this.id,
+    required this.petId,
+    required this.petName,
+    required this.petSpecies,
+    this.petImageUrl,
     required this.title,
-    required this.date,
-    required this.clinic,
-    required this.animalType,
-    this.iconColor,
+    required this.recordDate,
+    this.clinicName,
+    this.doctorName,
+    required this.recordType,
+    this.medicalNotes,
+    this.healthCondition,
+    this.petWeightKg,
+    this.hasXray,
+    this.vaccineName,
   });
 }
 
@@ -33,74 +53,8 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
   late TextEditingController _searchController;
   String _searchQuery = '';
   String _animalFilter = 'all'; // 'all', 'kucing', 'anjing'
-
-  // 2. DATA SOURCE
-  final List<MedicalRecord> _allRecords = [
-    // Kemarin
-    MedicalRecord(
-      icon: 'assets/images/iconkucingmed.png',
-      title: 'Vaksin Feline Calicivirus',
-      date: 'Kemarin · 12:43 PM',
-      clinic: 'Klinik Sayang Hewan Indonesia',
-      animalType: 'kucing',
-    ),
-    MedicalRecord(
-      icon: 'assets/images/iconkucingmed.png',
-      title: 'Pemeriksaan Rutin Kucing',
-      date: 'Kemarin · 15:00 PM',
-      clinic: 'Klinik Sayang Hewan Indonesia',
-      animalType: 'kucing',
-    ),
-    // Sabtu, 22 Maret 2024
-    MedicalRecord(
-      icon: 'assets/images/iconanjingmed.png',
-      title: 'Vaksin Parainfluenza',
-      date: 'Sabtu, 22 Maret 2024 · 09:45 AM',
-      clinic: 'Klinik Peduli Anabul Indonesia',
-      animalType: 'anjing',
-      iconColor: Colors.purple,
-    ),
-    // Jumat, 21 Maret 2024
-    MedicalRecord(
-      icon: 'assets/images/iconkucingmed.png',
-      title: 'Operasi Sterilisasi',
-      date: 'Jumat, 21 Maret 2024 · 12:43 PM',
-      clinic: 'Klinik Sayang Hewan Indonesia',
-      animalType: 'kucing',
-    ),
-    // Rabu, 20 Maret 2024
-    MedicalRecord(
-      icon: 'assets/images/iconanjingmed.png',
-      title: 'Pemeriksaan Gigi Anjing',
-      date: 'Rabu, 20 Maret 2024 · 10:00 AM',
-      clinic: 'Klinik Sehat Pet',
-      animalType: 'anjing',
-      iconColor: Colors.purple,
-    ),
-    MedicalRecord(
-      icon: 'assets/images/iconkucingmed.png',
-      title: 'Konsultasi Gizi',
-      date: 'Rabu, 20 Maret 2024 · 11:30 AM',
-      clinic: 'Klinik Sehat Pet',
-      animalType: 'kucing',
-    ),
-    // Senin, 18 Maret 2024
-    MedicalRecord(
-      icon: 'assets/images/iconanjingmed.png',
-      title: 'Vaksin Rabies Anjing',
-      date: 'Senin, 18 Maret 2024 · 02:00 PM',
-      clinic: 'Klinik Peduli Anabul Indonesia',
-      animalType: 'anjing',
-      iconColor: Colors.purple,
-    ),
-    MedicalRecord(
-      icon: 'assets/images/iconkucingmed.png',
-      title: 'Perawatan Kutu',
-      date: 'Senin, 18 Maret 2024 · 03:15 PM',
-      clinic: 'Klinik Sayang Hewan Indonesia',
-      animalType: 'kucing',
-    ),
-  ];
+  bool _isLoading = false;
+  List<MedicalRecord> _supaRecords = [];
 
   @override
   void initState() {
@@ -111,6 +65,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
         _searchQuery = _searchController.text;
       });
     });
+    _fetchRecords();
   }
 
   @override
@@ -119,14 +74,109 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     super.dispose();
   }
 
+  Future<void> _fetchRecords() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      if (userId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat memuat catatan: Pengguna tidak login.')),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Fetch Medical Records
+      final medicalResponse = await Supabase.instance.client
+          .from('medical_records')
+          .select('*, pets(name, species, image_url)')
+          .eq('pets.owner_id', userId)
+          .order('visit_date', ascending: false);
+
+      List<MedicalRecord> medicalRecords = (medicalResponse as List).map((data) {
+        final petData = data['pets'] as Map<String, dynamic>;
+        return MedicalRecord(
+          id: data['id'],
+          petId: data['pet_id'],
+          petName: petData['name'],
+          petSpecies: petData['species'],
+          petImageUrl: petData['image_url'],
+          title: 'Pemeriksaan Medis', // Generic title for medical records
+          recordDate: DateTime.parse(data['created_at']), // Use created_at for time
+          clinicName: data['clinic_name'],
+          doctorName: data['doctor_name'],
+          recordType: 'medical',
+          medicalNotes: data['medical_notes'],
+          healthCondition: data['pet_health_condition'],
+          petWeightKg: (data['pet_weight_kg'] as num?)?.toDouble(),
+          hasXray: data['has_xray'],
+        );
+      }).toList();
+
+      // Fetch Vaccination Records
+      final vaccinationResponse = await Supabase.instance.client
+          .from('vaccination_records')
+          .select('*, pets(name, species, image_url)')
+          .eq('pets.owner_id', userId)
+          .order('vaccination_date', ascending: false);
+
+      List<MedicalRecord> vaccinationRecords = (vaccinationResponse as List).map((data) {
+        final petData = data['pets'] as Map<String, dynamic>;
+        return MedicalRecord(
+          id: data['id'],
+          petId: data['pet_id'],
+          petName: petData['name'],
+          petSpecies: petData['species'],
+          petImageUrl: petData['image_url'],
+          title: data['vaccine_name'], // Vaccine name as title
+          recordDate: DateTime.parse(data['vaccination_date']), // Keep using vaccination_date
+          recordType: 'vaccination',
+          medicalNotes: data['medical_notes'],
+          vaccineName: data['vaccine_name'],
+        );
+      }).toList();
+
+      List<MedicalRecord> allFetchedRecords = [];
+      allFetchedRecords.addAll(medicalRecords);
+      allFetchedRecords.addAll(vaccinationRecords);
+
+      // Sort all records by date
+      allFetchedRecords.sort((a, b) => b.recordDate.compareTo(a.recordDate));
+
+      setState(() {
+        _supaRecords = allFetchedRecords;
+      });
+    } catch (e) {
+      print('Error fetching records: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat catatan: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 3. FILTERING LOGIC
-    final List<MedicalRecord> filteredRecords = _allRecords.where((record) {
+    final List<MedicalRecord> filteredRecords = _supaRecords.where((record) {
       final titleLower = record.title.toLowerCase();
       final searchQueryLower = _searchQuery.toLowerCase();
-      final typeMatches = _animalFilter == 'all' || record.animalType == _animalFilter;
-      return titleLower.contains(searchQueryLower) && typeMatches;
+      final typeMatches = _animalFilter == 'all' || record.petSpecies == _animalFilter;
+      // Filter by petName as well
+      final petNameLower = record.petName.toLowerCase();
+      return (titleLower.contains(searchQueryLower) || petNameLower.contains(searchQueryLower)) && typeMatches;
     }).toList();
 
     // 4. GROUPING AND BUILDING LIST ITEMS
@@ -134,12 +184,12 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     if (_searchQuery.isEmpty) {
       Map<String, List<MedicalRecord>> groupedRecords = {};
       for (var record in filteredRecords) {
-        // Simple date part extraction for grouping.
-        String datePart = record.date.split('·')[0].trim();
-        if (groupedRecords.containsKey(datePart)) {
-          groupedRecords[datePart]!.add(record);
+        // Group by formatted date (e.g., "Hari Ini", "Kemarin", "Sabtu, 22 Maret 2024")
+        String formattedDate = _formatDateForGrouping(record.recordDate);
+        if (groupedRecords.containsKey(formattedDate)) {
+          groupedRecords[formattedDate]!.add(record);
         } else {
-          groupedRecords[datePart] = [record];
+          groupedRecords[formattedDate] = [record];
         }
       }
       
@@ -153,9 +203,12 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     }
 
 
-    return Scaffold(        backgroundColor: Colors.grey[50],
-        body: Column(
-          children: [
+    return Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,
@@ -262,96 +315,96 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
             ),
             
             // Spacer to push content down, avoiding overlap with the image
-            SizedBox(height: 80), 
+            const SizedBox(height: 80), 
   
             // Search Bar
-  Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-    child: Row(
-      children: [
-                      // BACK BUTTON WITH BOX
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                          );
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(15),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(10), // kotak rounded
-                          ),
-                          child: Icon(
-                            Icons.arrow_back_ios,
-                            size: 18,
-                            color: Colors.black87,
-                          ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                children: [
+                  // BACK BUTTON WITH BOX
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10), // kotak rounded
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        size: 18,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+  
+                  // SEARCH BAR
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Penelusuran',
+                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          border: InputBorder.none,
+                          prefixIcon: const Icon(Icons.search, color: Colors.orange),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 15),
                         ),
                       ),
-        SizedBox(width: 15),
+                    ),
+                  ),
   
-        // SEARCH BAR
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Penelusuran',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                border: InputBorder.none,
-                prefixIcon: Icon(Icons.search, color: Colors.orange),
-                contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 15),
+                  const SizedBox(width: 15),
+  
+                  // FILTER ICON (no box)
+                  PopupMenuButton<String>(
+                    onSelected: (String value) {
+                      setState(() {
+                        _animalFilter = value;
+                      });
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'all',
+                        child: Text('Semua'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'kucing',
+                        child: Text('Kucing'),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'anjing',
+                        child: Text('Anjing'),
+                      ),
+                    ],
+                    child: Image.asset(
+                      'assets/images/filter.png',
+                      width: 48,
+                      height: 48,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ),
   
-        SizedBox(width: 15),
-  
-                // FILTER ICON (no box)
-                PopupMenuButton<String>(
-                  onSelected: (String value) {
-                    setState(() {
-                      _animalFilter = value;
-                    });
-                  },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
-                      value: 'all',
-                      child: Text('Semua'),
-                    ),
-                    const PopupMenuItem<String>(
-                      value: 'kucing',
-                      child: Text('Kucing'),
-                    ),
-                    const PopupMenuItem<String>(
-                      value: 'anjing',
-                      child: Text('Anjing'),
-                    ),
-                  ],
-                  child: Image.asset(
-                    'assets/images/filter.png',
-                    width: 48,
-                    height: 48,
-                  ),
-                ),
-              ],
-            ),
-          ),
-  
-  SizedBox(height: 20),
+            const SizedBox(height: 20),
   
             
             // Medical Records List
             Expanded(
               child: ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: listItems.length,
                 itemBuilder: (context, index) {
                   final item = listItems[index];
@@ -361,7 +414,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                       padding: const EdgeInsets.only(top: 15.0, bottom: 15.0),
                       child: Text(
                         item,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -369,14 +422,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                     );
                   } else if (item is MedicalRecord) {
                     // Build a medical card
-                    return _buildMedicalCard(
-                      icon: item.icon,
-                      iconSize: 64,
-                      title: item.title,
-                      date: item.date,
-                      clinic: item.clinic,
-                      iconColor: item.iconColor,
-                    );
+                    return _buildMedicalCard(item);
                   }
                   return const SizedBox.shrink(); // Should not happen
                 },
@@ -384,19 +430,79 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
             ),
           ],
         ),
+    );
+    }
+  
+  String _formatDateForGrouping(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final recordDate = DateTime(date.year, date.month, date.day);
+
+    if (recordDate == today) {
+      return 'Hari Ini';
+    } else if (recordDate == yesterday) {
+      return 'Kemarin';
+    } else {
+      return DateFormat('EEEE, dd MMMM yyyy', 'id_ID').format(date); // 'id_ID' for Indonesian
+    }
+  }
+
+  Widget _buildMedicalCard(MedicalRecord item) {
+    // Determine icon based on pet species
+    Widget iconWidget;
+    if (item.petImageUrl != null && item.petImageUrl!.isNotEmpty) {
+      iconWidget = ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Image.network(
+          item.petImageUrl!,
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback for network error
+            return Image.asset(
+              item.petSpecies.toLowerCase() == 'anjing'
+                  ? 'assets/images/iconanjingmed.png'
+                  : 'assets/images/iconkucingmed.png',
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+            );
+          },
+        ),
       );
-    }  
-  Widget _buildMedicalCard({
-    required String icon,
-    double iconSize = 35,
-    required String title,
-    required String date,
-    required String clinic,
-    Color? iconColor,
-  }) {
+    } else {
+      // Fallback for no image URL
+      iconWidget = Image.asset(
+        item.petSpecies.toLowerCase() == 'anjing'
+            ? 'assets/images/iconanjingmed.png'
+            : 'assets/images/iconkucingmed.png',
+        width: 50,
+        height: 50,
+        fit: BoxFit.contain,
+      );
+    }
+
+    String subtitleText;
+    String formattedDate;
+
+    if (item.recordType == 'medical') {
+      subtitleText = item.clinicName != null && item.clinicName!.isNotEmpty
+          ? item.clinicName!
+          : 'Klinik tidak diketahui';
+      formattedDate = DateFormat('dd MMMM yyyy · hh:mm a', 'id_ID').format(item.recordDate);
+    } else { // vaccination
+      subtitleText = item.medicalNotes != null && item.medicalNotes!.isNotEmpty
+          ? item.medicalNotes!
+          : 'Tanpa catatan tambahan';
+      // For vaccination, show only the date part to avoid "12:00 AM"
+      formattedDate = DateFormat('dd MMMM yyyy', 'id_ID').format(item.recordDate);
+    }
+
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(15),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -404,50 +510,42 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: 50,
             height: 50,
-            
-            child: Center(
-              child: Image.asset(
-                icon,
-                width: iconSize,
-                height: iconSize,
-                fit: BoxFit.contain,
-              ),
-            ),
+            child: iconWidget,
           ),
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
-                  style: TextStyle(
+                  item.title,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  date,
+                  '${item.petName} - $formattedDate', // Show pet name and date
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  clinic,
-                  style: TextStyle(
-                    color: Colors.orange,
+                  subtitleText,
+                  style: const TextStyle(
+                    color: Colors.orange, // Assuming clinic/notes text color is orange
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),

@@ -1,17 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../common/widgets/shortcut_page.dart';
 
 class AddMedicalRecordScreen extends StatefulWidget {
-  const AddMedicalRecordScreen({Key? key}) : super(key: key);
+  const AddMedicalRecordScreen({super.key});
 
   @override
   State<AddMedicalRecordScreen> createState() => _AddMedicalRecordScreenState();
 }
 
 class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
-  bool _autoFill = false;
-  String _selectedCountryCode = '🇮🇩';
   DateTime? _selectedDate;
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _pets = [];
+  String? _selectedPetId;
+  bool _hasXray = false;
+  String _selectedCountryCode = '🇮🇩';
+  List<Map<String, dynamic>> _clinics = [];
+  Map<String, dynamic>? _selectedClinic;
+
+  final _healthConditionController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _healthHistoryController = TextEditingController();
+  final _additionalInfoController = TextEditingController();
+  final _medicalNotesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPets();
+    _fetchClinics();
+  }
+
+  @override
+  void dispose() {
+    _healthConditionController.dispose();
+    _weightController.dispose();
+    _healthHistoryController.dispose();
+    _additionalInfoController.dispose();
+    _medicalNotesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchClinics() async {
+    try {
+      final response = await Supabase.instance.client.from('clinics').select();
+      setState(() {
+        _clinics = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching clinics: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data klinik: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +95,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                   ),
                 ),
               ),
-              
+
               // TITLE - ubah jadi Flexible
               const Flexible(
                 child: Text(
@@ -65,7 +109,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                   ),
                 ),
               ),
-              
+
               // MENU BUTTON
               GestureDetector(
                 onTap: () {
@@ -109,74 +153,6 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Data Pemilik Section
-          const Text(
-            'Data Pemilik',
-            style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 15),
-          
-          _buildTextField(hint: 'Nama lengkap'),
-          const SizedBox(height: 12),
-          
-          _buildPhoneField(),
-          const SizedBox(height: 12),
-          
-          _buildTextField(hint: 'E-mail'),
-          const SizedBox(height: 20),
-          
-          // Isi Otomatis Toggle
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Isi otomatis',
-                        style: TextStyle(
-                          fontFamily: 'PlusJakartaSans',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Data akan diisi dari profilmu',
-                        style: TextStyle(
-                          fontFamily: 'PlusJakartaSans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _autoFill,
-                  onChanged: (value) {
-                    setState(() {
-                      _autoFill = value;
-                    });
-                  },
-                  activeColor: const Color(0xFFFFA726),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 25),
-          
           // Data Peliharaan Section
           const Text(
             'Data Peliharaan',
@@ -187,23 +163,46 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
             ),
           ),
           const SizedBox(height: 15),
-          
-          _buildTextField(hint: 'Nama peliharaan'),
+
+          DropdownButtonFormField<String>(
+            value: _selectedPetId,
+            hint: const Text('Pilih peliharaan'),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedPetId = newValue;
+              });
+            },
+            items: _pets.map<DropdownMenuItem<String>>((Map<String, dynamic> pet) {
+              return DropdownMenuItem<String>(
+                value: pet['id'],
+                child: Text(pet['name']),
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
-          
-          _buildTextField(hint: 'Kondisi kesehatan'),
+
+          _buildTextField(hint: 'Kondisi kesehatan', controller: _healthConditionController),
           const SizedBox(height: 12),
-          
+
           _buildTextField(
             hint: 'Deskripsi riwayat kesehatan',
             maxLines: 3,
+            controller: _healthHistoryController,
           ),
           const SizedBox(height: 12),
-          
+
           Row(
             children: [
               Expanded(
-                child: _buildTextField(hint: 'Berat peliharaan'),
+                child: _buildTextField(hint: 'Berat peliharaan', controller: _weightController),
               ),
               const SizedBox(width: 12),
               Container(
@@ -225,46 +224,131 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           _buildTextField(
             hint: 'Informasi tambahan',
             maxLines: 3,
+            controller: _additionalInfoController,
           ),
           const SizedBox(height: 25),
-          
-          // Data Klinik Section
-          const Text(
-            'Data Klinik',
-            style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 15),
-          
-          _buildTextField(hint: 'Nama Klinik'),
-          const SizedBox(height: 12),
-          
-          _buildTextField(hint: 'Nama dokter atau perawat'),
-          const SizedBox(height: 12),
-          
-          _buildTextField(
-            hint: 'Alamat klinik',
-            suffixIcon: const Icon(
-              Icons.location_on,
-              color: Color(0xFFFF6B6B),
-            ),
-          ),
-          const SizedBox(height: 12),
-          
+
+                    // Data Klinik Section
+
+                    const Text(
+
+                      'Data Klinik',
+
+                      style: TextStyle(
+
+                        fontFamily: 'PlusJakartaSans',
+
+                        fontSize: 16,
+
+                        fontWeight: FontWeight.w700,
+
+                      ),
+
+                    ),
+
+                    const SizedBox(height: 15),
+
+
+
+                    DropdownButtonFormField<Map<String, dynamic>>(
+
+                      value: _selectedClinic,
+
+                      hint: const Text('Pilih Klinik'),
+
+                      onChanged: (Map<String, dynamic>? newValue) {
+
+                        setState(() {
+
+                          _selectedClinic = newValue;
+
+                        });
+
+                      },
+
+                      items: _clinics.map<DropdownMenuItem<Map<String, dynamic>>>((Map<String, dynamic> clinic) {
+
+                        return DropdownMenuItem<Map<String, dynamic>>(
+
+                          value: clinic,
+
+                          child: Text(clinic['name']),
+
+                        );
+
+                      }).toList(),
+
+                      decoration: InputDecoration(
+
+                        filled: true,
+
+                        fillColor: Colors.white,
+
+                        border: OutlineInputBorder(
+
+                          borderRadius: BorderRadius.circular(12),
+
+                          borderSide: BorderSide.none,
+
+                        ),
+
+                      ),
+
+                    ),
+
+
+
+                    if (_selectedClinic != null) ...[
+
+                      const SizedBox(height: 12),
+
+                      Container(
+
+                        padding: const EdgeInsets.all(12),
+
+                        decoration: BoxDecoration(
+
+                          color: Colors.white,
+
+                          borderRadius: BorderRadius.circular(12),
+
+                        ),
+
+                        child: Column(
+
+                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                          children: [
+
+                            Text('Dokter: ${_selectedClinic!['doctor_name'] ?? '-'}'),
+
+                            const SizedBox(height: 4),
+
+                            Text('Telepon: ${_selectedClinic!['phone'] ?? '-'}'),
+
+                          ],
+
+                        ),
+
+                      )
+
+                    ],
+
+
+
+                    const SizedBox(height: 12),
+
           Row(
             children: [
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.calendar_today,
-                  label: _selectedDate == null 
-                    ? 'Tanggal' 
+                  label: _selectedDate == null
+                    ? 'Tanggal'
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                   onTap: () => _selectDate(context),
                 ),
@@ -274,25 +358,31 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 child: _buildActionButton(
                   icon: Icons.image_outlined,
                   label: 'X-Ray',
-                  onTap: () {},
+                  onTap: () {
+                    setState(() {
+                      _hasXray = !_hasXray;
+                    });
+                  },
+                  isActive: _hasXray,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          
+
           _buildTextField(
             hint: 'Catatan medis',
             maxLines: 3,
+            controller: _medicalNotesController,
           ),
           const SizedBox(height: 30),
-          
+
           // Submit Button
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _isLoading ? null : _saveMedicalRecord,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B6B),
                 shape: RoundedRectangleBorder(
@@ -300,15 +390,17 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Simpan',
-                style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                  : const Text(
+                      'Simpan',
+                      style: TextStyle(
+                        fontFamily: 'PlusJakartaSans',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 20),
@@ -317,10 +409,74 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     );
   }
 
+  Future<void> _saveMedicalRecord() async {
+    if (_selectedPetId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih peliharaan.')),
+      );
+      return;
+    }
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih tanggal kunjungan.')),
+      );
+      return;
+    }
+    if (_selectedClinic == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih klinik.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final combinedNotes = [
+        _healthHistoryController.text,
+        _additionalInfoController.text,
+        _medicalNotesController.text,
+      ].where((note) => note.isNotEmpty).join('\n\n');
+
+      final medicalRecord = {
+        'pet_id': _selectedPetId,
+        'visit_date': _selectedDate!.toIso8601String(),
+        'pet_health_condition': _healthConditionController.text,
+        'pet_weight_kg': double.tryParse(_weightController.text),
+        'has_xray': _hasXray,
+        'medical_notes': combinedNotes,
+        'clinic_id': _selectedClinic!['id'], // Use the selected clinic's ID
+      };
+
+      await Supabase.instance.client.from('medical_records').insert(medicalRecord);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Catatan medis berhasil disimpan!')),
+      );
+      Navigator.pop(context);
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan catatan: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Widget _buildTextField({
     required String hint,
     int maxLines = 1,
     Widget? suffixIcon,
+    TextEditingController? controller,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -328,6 +484,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
+        controller: controller,
         maxLines: maxLines,
         style: const TextStyle(
           fontFamily: 'PlusJakartaSans',
@@ -357,71 +514,20 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
     );
   }
 
-  Widget _buildPhoneField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // tetap putih
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  _selectedCountryCode,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TextField(
-              style: const TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.black, // ubah ke hitam
-              ),
-              decoration: InputDecoration(
-                hintText: 'Nomor telepon',
-                hintStyle: const TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 0,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildActionButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    bool isActive = false,
   }) {
     return InkWell(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFE5E5),
+          color: isActive ? const Color(0xFFFF6B6B) : const Color(0xFFFFE5E5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -429,17 +535,17 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           children: [
             Icon(
               icon,
-              color: const Color(0xFFFF6B6B),
+              color: isActive ? Colors.white : const Color(0xFFFF6B6B),
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: 'PlusJakartaSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFFF6B6B),
+                color: isActive ? Colors.white : const Color(0xFFFF6B6B),
               ),
             ),
           ],

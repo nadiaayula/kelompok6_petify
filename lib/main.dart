@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart'; // Keep this import
+import 'package:kelompok6_adoptify/features/auth/screens/login_screen.dart'; // Keep this import
 // Auth screens
 import 'features/auth/screens/splash_welcome_screen.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -29,6 +31,7 @@ Future<void> main() async {
   print('Supabase client initialized: ${Supabase.instance.client}');
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -40,8 +43,18 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
+
       home: SplashWelcomeScreen(),
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', ''), // English, no country code
+        Locale('id', ''), // Indonesian, no country code
+      ],
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
