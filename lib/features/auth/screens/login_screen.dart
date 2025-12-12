@@ -85,17 +85,18 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
     try {
-      final result = await Supabase.instance.client.auth.signInWithOAuth(
+      await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       
-      if (!result) {
-        throw Exception('Google Sign-In was cancelled');
-      }
+      // Wait for auth state change
+      await Future.delayed(const Duration(seconds: 2));
       
-      if (mounted) {
+      // Check if user is signed in
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null && mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const DashboardScreen(),

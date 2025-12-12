@@ -135,17 +135,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _isLoading = true;
     });
     try {
-      final result = await Supabase.instance.client.auth.signInWithOAuth(
+      await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
       
-      if (!result) {
-        throw Exception('Google Sign-In was cancelled');
-      }
+      await Future.delayed(const Duration(seconds: 2));
       
-      if (mounted) {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null && mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const DashboardScreen(),
