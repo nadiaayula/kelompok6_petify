@@ -45,7 +45,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           .from('pets')
           .select('id, name')
           .eq('owner_id', userId);
-
+      
       print('Supabase response: $response'); // Debug print
 
       setState(() {
@@ -107,7 +107,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   ),
                 ),
               ),
-
+              
               // TITLE
               const Flexible(
                 child: Text(
@@ -121,7 +121,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   ),
                 ),
               ),
-
+              
               // MENU BUTTON
               GestureDetector(
                 onTap: () {
@@ -203,20 +203,20 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
 
           _buildTextField(hint: 'Nama Klinik', controller: _clinicNameController),
           const SizedBox(height: 12),
-
+          
           _buildTextField(hint: 'Nama dokter atau perawat', controller: _doctorNameController),
           const SizedBox(height: 12),
 
           _buildPhoneField(),
           const SizedBox(height: 25),
-
+          
           Row(
             children: [
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.calendar_today,
-                  label: _selectedDate == null
-                    ? 'Tanggal'
+                  label: _selectedDate == null 
+                    ? 'Tanggal' 
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                   onTap: () => _showCalendarModal(),
                 ),
@@ -232,14 +232,14 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             ],
           ),
           const SizedBox(height: 12),
-
+          
           _buildTextField(
             hint: 'Catatan medis',
             maxLines: 3,
             controller: _medicalNotesController,
           ),
           const SizedBox(height: 30),
-
+          
           // Submit Button
           SizedBox(
             width: double.infinity,
@@ -366,7 +366,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             .insert(newClinic)
             .select('id')
             .single();
-
+        
         return insertResponse['id'] as String;
       }
     } catch (e) {
