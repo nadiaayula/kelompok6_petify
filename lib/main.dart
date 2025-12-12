@@ -3,11 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kelompok6_adoptify/features/auth/screens/register_screen.dart';
+import 'package:kelompok6_adoptify/features/history/history_page.dart';
+import 'package:kelompok6_adoptify/features/rewards/screens/rewards_page.dart';
+import 'package:kelompok6_adoptify/owner_profile/profile_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
+import 'package:kelompok6_adoptify/features/history/history_page.dart';
+
 
 
 Future<void> main() async {

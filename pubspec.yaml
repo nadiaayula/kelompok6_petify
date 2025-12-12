@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   google_fonts: ^4.0.0
-  flutter_dotenv: ^5.1.0
+  flutter_dotenv: ^6.0.0
   supabase_flutter: ^2.10.3
 
 dev_dependencies:
