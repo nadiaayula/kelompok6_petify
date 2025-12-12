@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'reward_status_dialog.dart';
 
 class RewardConfirmationPage extends StatefulWidget {
+  final String rewardId;
   final String rewardName;
   final String rewardPoints;
   final String? imageUrl;
 
   const RewardConfirmationPage({
     Key? key,
+    required this.rewardId,
     required this.rewardName,
     required this.rewardPoints,
     this.imageUrl,
@@ -18,11 +21,13 @@ class RewardConfirmationPage extends StatefulWidget {
 }
 
 class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
+  final supabase = Supabase.instance.client;
+  
   bool isAutoFill = false;
   String selectedShipping = '';
   bool isConfirmed = false;
+  bool isSubmitting = false;
   
-  // Controllers untuk text fields
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -41,33 +46,160 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
     super.dispose();
   }
   
-  // Fungsi validasi
+  Future<void> _loadProfile() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return;
+      
+      final result = await supabase.rpc('get_user_profile_for_redemption', params: {
+        'p_user_id': userId,
+      });
+      
+      if (result != null && result is Map) {
+        setState(() {
+          nameController.text = result['display_name'] ?? '';
+          phoneController.text = result['phone'] ?? '';
+          addressController.text = result['address'] ?? '';
+          provinceController.text = result['province'] ?? '';
+          postalCodeController.text = result['postal_code'] ?? '';
+          emailController.text = supabase.auth.currentUser?.email ?? '';
+        });
+      }
+    } catch (e) {
+      print('Error loading profile: $e');
+    }
+  }
+  
   bool _validateForm() {
     if (nameController.text.trim().isEmpty) {
+      print('❌ Validation failed: Name empty');
       return false;
     }
     if (phoneController.text.trim().isEmpty) {
+      print('❌ Validation failed: Phone empty');
       return false;
     }
     if (emailController.text.trim().isEmpty) {
+      print('❌ Validation failed: Email empty');
       return false;
     }
     if (addressController.text.trim().isEmpty) {
+      print('❌ Validation failed: Address empty');
       return false;
     }
     if (provinceController.text.trim().isEmpty) {
+      print('❌ Validation failed: Province empty');
       return false;
     }
     if (postalCodeController.text.trim().isEmpty) {
+      print('❌ Validation failed: Postal code empty');
       return false;
     }
     if (selectedShipping.isEmpty) {
+      print('❌ Validation failed: Shipping not selected');
       return false;
     }
     if (!isConfirmed) {
+      print('❌ Validation failed: Not confirmed');
       return false;
     }
+    print('✅ Validation passed');
     return true;
+  }
+
+  Future<void> _handleSubmit() async {
+    print('🔵 Submit button pressed');
+    
+    if (!_validateForm()) {
+      print('❌ Form validation failed');
+      // Langsung show dialog gagal, BUKAN SnackBar
+      RewardStatusDialog.show(context, isSuccess: false);
+      return;
+    }
+    
+    setState(() => isSubmitting = true);
+    
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      print('👤 User ID: $userId');
+      
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+      
+      final fullAddress = '${addressController.text}, ${provinceController.text}, ${postalCodeController.text}';
+      
+      print('📤 Sending to Supabase:');
+      print('  - User ID: $userId');
+      print('  - Reward ID: ${widget.rewardId}');
+      print('  - Name: ${nameController.text.trim()}');
+      print('  - Phone: ${phoneController.text.trim()}');
+      print('  - Address: $fullAddress');
+      print('  - Shipping: ${selectedShipping.toLowerCase()}');
+      
+      // Map shipping name ke format yang diterima database
+      String shippingCode = selectedShipping.toLowerCase();
+      if (selectedShipping == 'J&T') {
+        shippingCode = 'jnt';
+      } else if (selectedShipping == 'JNE') {
+        shippingCode = 'jne';
+      } else if (selectedShipping == 'SiCepat') {
+        shippingCode = 'sicepat';
+      } else if (selectedShipping == 'Anteraja') {
+        shippingCode = 'anteraja';
+      }
+      
+      print('  - Shipping: ${selectedShipping} → $shippingCode');
+      
+      final result = await supabase.rpc('manual_redeem_reward', params: {
+        'p_user_id': userId,
+        'p_reward_id': widget.rewardId,
+        'p_recipient_name': nameController.text.trim(),
+        'p_recipient_phone': phoneController.text.trim(),
+        'p_address': fullAddress,
+        'p_shipping_provider': shippingCode,
+      });
+      
+      print('📥 Response received:');
+      print('  - Type: ${result.runtimeType}');
+      print('  - Value: $result');
+      
+      setState(() => isSubmitting = false);
+      
+      // Handle berbagai format response
+      bool isSuccess = false;
+      
+      if (result == null) {
+        print('✅ Result is null - treating as success');
+        isSuccess = true;
+      } else if (result is bool) {
+        print('✅ Result is bool: $result');
+        isSuccess = result;
+      } else if (result is Map) {
+        print('✅ Result is Map: $result');
+        isSuccess = result['success'] == true;
+      } else if (result is String) {
+        print('✅ Result is String: $result');
+        isSuccess = result.toLowerCase() == 'success';
+      } else {
+        print('⚠️ Unknown result type: ${result.runtimeType}');
+      }
+      
+      print('🎯 Final isSuccess: $isSuccess');
+      
+      if (!mounted) return;
+      RewardStatusDialog.show(context, isSuccess: isSuccess);
+      
+    } catch (e, stackTrace) {
+      print('💥 ERROR caught:');
+      print('  Error: $e');
+      print('  Stack trace: $stackTrace');
+      
+      setState(() => isSubmitting = false);
+      
+      if (!mounted) return;
+      RewardStatusDialog.show(context, isSuccess: false);
+    }
   }
 
   @override
@@ -100,7 +232,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
               ),
               const SizedBox(height: 24),
 
-              // Progress indicator
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -114,7 +245,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 32),
 
-              // Product image
               Center(
                 child: Container(
                   width: double.infinity,
@@ -144,7 +274,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 16),
 
-              // Points badge
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -178,7 +307,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 32),
 
-              // Nama/ID
               const Text(
                 'Nama/ID',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -192,7 +320,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
-              // Isi otomatis toggle
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -212,9 +339,8 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                   Switch(
                     value: isAutoFill,
                     onChanged: (value) {
-                      setState(() {
-                        isAutoFill = value;
-                      });
+                      setState(() => isAutoFill = value);
+                      if (value) _loadProfile();
                     },
                     activeColor: Colors.orange,
                   ),
@@ -223,7 +349,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
-              // Alamat Penerima
               const Text(
                 'Alamat Penerima',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -241,7 +366,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
-              // Ekspedisi Pengiriman
               const Text(
                 'Ekspedisi Pengiriman',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -249,23 +373,22 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _buildShippingOption('Anteraja', 'assets/anteraja.png')),
+                  Expanded(child: _buildShippingOption('Anteraja', 'assets/images/anteraja.png')),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildShippingOption('JNE', 'assets/jne.png')),
+                  Expanded(child: _buildShippingOption('JNE', 'assets/images/jne.png')),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _buildShippingOption('J&T', 'assets/jnt.png')),
+                  Expanded(child: _buildShippingOption('J&T', 'assets/images/jnt.png')),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildShippingOption('SiCepat', 'assets/sicepat.png')),
+                  Expanded(child: _buildShippingOption('SiCepat', 'assets/images/sicepat.png')),
                 ],
               ),
 
               const SizedBox(height: 24),
 
-              // Confirmation checkbox
               Row(
                 children: [
                   const Expanded(
@@ -277,9 +400,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                   Switch(
                     value: isConfirmed,
                     onChanged: (value) {
-                      setState(() {
-                        isConfirmed = value;
-                      });
+                      setState(() => isConfirmed = value);
                     },
                     activeColor: Colors.orange,
                   ),
@@ -288,7 +409,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
 
               const SizedBox(height: 24),
 
-              // Buttons
               Row(
                 children: [
                   Expanded(
@@ -310,16 +430,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
-                        // Validasi form sebelum submit
-                        if (_validateForm()) {
-                          // Semua field terisi, tampilkan success
-                          RewardStatusDialog.show(context, isSuccess: true);
-                        } else {
-                          // Ada field yang kosong, tampilkan failed
-                          RewardStatusDialog.show(context, isSuccess: false);
-                        }
-                      },
+                      onPressed: isSubmitting ? null : _handleSubmit,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -327,10 +438,19 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Lanjutkan',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                      child: isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Lanjutkan',
+                            style: TextStyle(color: Colors.white),
+                          ),
                     ),
                   ),
                 ],
@@ -479,9 +599,7 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
   Widget _buildShippingOption(String name, String assetPath) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          selectedShipping = name;
-        });
+        setState(() => selectedShipping = name);
       },
       child: Container(
         padding: const EdgeInsets.all(20),
