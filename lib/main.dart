@@ -1,15 +1,11 @@
-import 'package:kelompok6_adoptify/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:kelompok6_adoptify/features/auth/screens/register_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/authentication/screens/splash_welcome_screen.dart';
-import 'features/authentication/screens/create_account_screen.dart';
+import 'features/auth/screens/splash_welcome_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/register_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
-import 'features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
-import 'features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
-import 'features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 
 
 Future<void> main() async {
@@ -40,7 +36,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        '/createAccount': (context) => CreateAccountScreen(),
         '/home': (context) => VpmHomeScreen(),
       },
     );

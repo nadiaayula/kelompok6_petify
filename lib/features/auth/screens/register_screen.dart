@@ -41,14 +41,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final name = _nameController.text;
         final whatsapp = _whatsappController.text;
 
-        await Supabase.instance.client.auth.signUp(
-          email: email,
-          password: password,
-          data: {'full_name': name, 'whatsapp': whatsapp},
-        );
+        // Sign up user
+        print('🔍 Starting signup for: $email');
+        
+        try {
+          final response = await Supabase.instance.client.auth.signUp(
+            email: email,
+            password: password,
+          );
+          
+          print('🔍 Signup response: ${response.user?.id}');
+          print('🔍 Session: ${response.session?.accessToken != null ? "Valid" : "Null"}');
+
+          // Insert ke tabel owner_profile
+          if (response.user != null) {
+            try {
+              print('🔍 DEBUG: Trying to insert profile...');
+              print('🔍 User ID: ${response.user!.id}');
+              print('🔍 Display Name: $name');
+              print('🔍 Phone: $whatsapp');
+              
+              await Supabase.instance.client.from('owner_profile').insert({
+                'user_id': response.user!.id,
+                'display_name': name,
+                'phone': whatsapp,
+              });
+              print('✅ Profile saved successfully');
+            } catch (e) {
+              print('❌ Error saving profile: $e');
+              print('❌ Error type: ${e.runtimeType}');
+              // Show detailed error to user
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Warning: Profile not saved. Error: $e'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 5),
+                  ),
+                );
+              }
+            }
+          } else {
+            print('⚠️ No user returned from signup');
+          }
+        } catch (signupError) {
+          print('❌❌ SIGNUP FAILED: $signupError');
+          print('❌❌ Error type: ${signupError.runtimeType}');
+          rethrow; // Throw lagi biar ketangkap di catch utama
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration successful! Check your email for confirmation.')),
+            const SnackBar(
+              content: Text('Registration successful! Check your email for confirmation.'),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.pop(context);
         }
