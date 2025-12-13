@@ -261,7 +261,8 @@ class _ProfileCard extends StatelessWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => RewardsPage()),
+                          MaterialPageRoute(builder: (_) => const HistoryPage(filter: HistoryFilter.all),
+                          ),
                         );
                       },
                     ),

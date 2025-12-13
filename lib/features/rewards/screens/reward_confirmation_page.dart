@@ -112,7 +112,6 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
     
     if (!_validateForm()) {
       print('❌ Form validation failed');
-      // Langsung show dialog gagal, BUKAN SnackBar
       RewardStatusDialog.show(context, isSuccess: false);
       return;
     }
@@ -163,6 +162,22 @@ class _RewardConfirmationPageState extends State<RewardConfirmationPage> {
       print('📥 Response received:');
       print('  - Type: ${result.runtimeType}');
       print('  - Value: $result');
+      
+      // INSERT KE ACTIVITY HISTORY
+      try {
+        await supabase.from('activity_history').insert({
+          'user_id': userId,
+          'activity_type': 'reward_redemption',
+          'title': 'Penukaran Reward',
+          'description': '${widget.rewardName} (${widget.rewardPoints})',
+          'points_earned': -int.parse(widget.rewardPoints.replaceAll(RegExp(r'[^0-9]'), '')),
+          'icon': widget.imageUrl,
+        });
+        print('✅ Activity history inserted');
+      } catch (historyError) {
+        print('⚠️ Failed to insert activity history: $historyError');
+        // Gak perlu throw error, biar redemption tetap lanjut
+      }
       
       setState(() => isSubmitting = false);
       
