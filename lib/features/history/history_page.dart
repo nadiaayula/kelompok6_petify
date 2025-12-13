@@ -31,18 +31,18 @@ class HistoryData {
     required this.asset,
   });
 
-  factory HistoryData.fromJson(Map<String, dynamic> json) {
-    return HistoryData(
-      type: json['activity_type'] ?? '',
-      animal: json['animal'] ?? '',
-      title: json['title'] ?? '',
-      subtitle: json['subtitle'] ?? '',
-      points: json['points'] ?? 0,
-      time: json['time'] ?? '',
-      date: json['date'] ?? '',
-      asset: json['asset'] ?? 'assets/images/kucing1.png',
-    );
-  }
+factory HistoryData.fromJson(Map<String, dynamic> json) {
+  return HistoryData(
+    type: json['activity_type'] ?? '',
+    animal: json['animal'] ?? '',
+    title: json['title'] ?? '',
+    subtitle: json['subtitle'] ?? '',
+    points: json['points'] ?? 0,
+    time: json['activity_time'] ?? '',
+    date: json['activity_date'] ?? '', 
+    asset: json['asset'] ?? 'assets/images/kucing1.png',
+  );
+}
 }
 
 class HistoryPage extends StatefulWidget {
