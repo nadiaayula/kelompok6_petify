@@ -1,5 +1,10 @@
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -10,18 +15,19 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final supabase = Supabase.instance.client;
-  
-  String selectedGender = 'male';
+
   bool isLoading = true;
-  bool isSaving = false;
-  
-  // Controllers
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _provinceController = TextEditingController();
-  final TextEditingController _postalCodeController = TextEditingController();
+  DateTime? birthDate;
+  String selectedGender = 'male';
+  String? avatarUrl;
+
+  final _name = TextEditingController();
+  final _phone = TextEditingController();
+  final _email = TextEditingController();
+  final _address = TextEditingController();
+  final _province = TextEditingController();
+  final _postal = TextEditingController();
+  final _birthDateController = TextEditingController();
 
   @override
   void initState() {
@@ -29,315 +35,329 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _loadProfile();
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _addressController.dispose();
-    _provinceController.dispose();
-    _postalCodeController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadProfile() async {
-    setState(() => isLoading = true);
-    
-    try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) {
-        setState(() => isLoading = false);
-        return;
-      }
-      
-      // Load profile from owner_profile table
-      final response = await supabase
-          .from('owner_profile')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-      
-      if (response != null) {
-        setState(() {
-          _nameController.text = response['display_name'] ?? '';
-          _phoneController.text = response['phone'] ?? '';
-          _addressController.text = response['address'] ?? '';
-          _provinceController.text = response['province'] ?? '';
-          _postalCodeController.text = response['postal_code'] ?? '';
-          selectedGender = response['gender'] ?? 'male';
-        });
-      }
-      
-      // Load email from auth
-      _emailController.text = supabase.auth.currentUser?.email ?? '';
-      
-      setState(() => isLoading = false);
-    } catch (e) {
-      print('Error loading profile: $e');
-      setState(() => isLoading = false);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat profil: $e')),
-        );
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final data = await supabase
+        .from('owner_profile')
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (data != null) {
+      _name.text = data['display_name'] ?? '';
+      _phone.text = data['phone'] ?? '';
+      _address.text = data['address'] ?? '';
+      _province.text = data['province'] ?? '';
+      _postal.text = data['postal_code'] ?? '';
+      selectedGender = data['gender'] ?? 'male';
+      avatarUrl = data['avatar_url'];
+
+      if (data['birth_date'] != null) {
+        birthDate = DateTime.parse(data['birth_date']);
+        _birthDateController.text =
+            DateFormat('dd MMMM yyyy').format(birthDate!);
       }
     }
+
+    _email.text = user.email ?? '';
+    setState(() => isLoading = false);
   }
 
-  Future<void> _saveProfile() async {
-    // Validasi
-    if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama lengkap harus diisi')),
-      );
-      return;
-    }
-    
-    setState(() => isSaving = true);
-    
-    try {
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) throw Exception('User not logged in');
-      
-      // Check if profile exists
-      final existing = await supabase
-          .from('owner_profile')
-          .select('id')
-          .eq('user_id', userId)
-          .maybeSingle();
-      
-      final profileData = {
-        'user_id': userId,
-        'display_name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        'address': _addressController.text.trim(),
-        'province': _provinceController.text.trim(),
-        'postal_code': _postalCodeController.text.trim(),
-        'gender': selectedGender,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-      
-      if (existing != null) {
-        // Update existing profile
-        await supabase
-            .from('owner_profile')
-            .update(profileData)
-            .eq('user_id', userId);
-      } else {
-        // Insert new profile
-        profileData['created_at'] = DateTime.now().toIso8601String();
-        await supabase.from('owner_profile').insert(profileData);
-      }
-      
-      setState(() => isSaving = false);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil berhasil disimpan!'),
-            backgroundColor: Colors.green,
+  // ================= DATE PICKER =================
+  Future<void> _pickBirthDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: birthDate ?? DateTime(2000),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.black,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
           ),
+          child: child!,
         );
-        Navigator.pop(context, true); // Return true untuk refresh parent
-      }
-    } catch (e) {
-      print('Error saving profile: $e');
-      setState(() => isSaving = false);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan profil: $e')),
-        );
-      }
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        birthDate = picked;
+        _birthDateController.text =
+            DateFormat('dd MMMM yyyy').format(picked);
+      });
     }
   }
 
+  // ================= ALERT + UPLOAD =================
+  Future<void> _showUploadAlert() async {
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Panduan Foto Profil'),
+        content: const Text(
+          'Gunakan foto dengan rasio 1:1 (persegi).\n'
+          'Pastikan wajah berada di tengah agar foto tampil rapi.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickAndUploadAvatar();
+            },
+            child: const Text('Mengerti'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    Uint8List? bytes;
+
+    if (kIsWeb) {
+      final res = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+      if (res == null || res.files.first.bytes == null) return;
+      bytes = res.files.first.bytes!;
+    } else {
+      final picked =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked == null) return;
+      bytes = await picked.readAsBytes();
+    }
+
+    final fileName =
+        '${user.id}-${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    await supabase.storage.from('avatars').uploadBinary(
+      fileName,
+      bytes,
+      fileOptions: const FileOptions(upsert: true),
+    );
+
+    final url = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+    await supabase
+        .from('owner_profile')
+        .update({'avatar_url': url}).eq('user_id', user.id);
+
+    setState(() => avatarUrl = url);
+  }
+
+  // ================= SAVE =================
+  Future<void> _save() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    await supabase.from('owner_profile').update({
+      'display_name': _name.text.trim(),
+      'phone': _phone.text.trim(),
+      'address': _address.text.trim(),
+      'province': _province.text.trim(),
+      'postal_code': _postal.text.trim(),
+      'gender': selectedGender,
+      'birth_date': birthDate?.toIso8601String().split('T').first,
+    }).eq('user_id', user.id);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil berhasil disimpan')),
+    );
+  }
+
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Profil'),
-        leading: IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: () => Navigator.pop(context),
-        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text('Profil', style: TextStyle(color: Colors.black)),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
-          : ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              children: [
-                const SizedBox(height: 10),
-
-                // ================= FOTO PROFILE =================
-                Center(
-                  child: Stack(
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  // ===== AVATAR =====
+                  Stack(
                     children: [
-                      const CircleAvatar(
-                        radius: 44,
-                        child: Text('😀', style: TextStyle(fontSize: 40)),
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(20),
+                          image: avatarUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(avatarUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: avatarUrl == null
+                            ? const Center(
+                                child: Text('🧑‍💼',
+                                    style: TextStyle(fontSize: 40)),
+                              )
+                            : null,
                       ),
                       Positioned(
-                        bottom: 0,
-                        right: 0,
+                        bottom: 6,
+                        right: 6,
                         child: GestureDetector(
-                          onTap: () {
-                            // TODO: pilih foto profile
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Fitur upload foto segera hadir!')),
-                            );
-                          },
+                          onTap: _showUploadAlert,
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: const BoxDecoration(
-                              color: Colors.orange,
+                              color: Colors.black,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
-                              Icons.edit,
-                              size: 16,
-                              color: Colors.white,
-                            ),
+                            child: const Icon(Icons.edit,
+                                size: 14, color: Colors.white),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                _Field(label: 'Nama lengkap', controller: _nameController),
-                _GenderDropdown(
-                  value: selectedGender,
-                  onChanged: (value) {
-                    setState(() => selectedGender = value);
-                  },
-                ),
-                _Field(label: 'Nomor WhatsApp', controller: _phoneController, keyboardType: TextInputType.phone),
-                _Field(label: 'Email', controller: _emailController, enabled: false), // Email read-only
-                _Field(label: 'Alamat rumah', controller: _addressController),
+                  _field(_name, 'Nama Lengkap'),
+                  _genderField(),
+                  _dateField(),
+                  _field(_phone, 'Nomor WhatsApp'),
+                  _field(_email, 'Email', enabled: false),
+                  _field(_address, 'Alamat rumah'),
 
-                Row(
-                  children: [
-                    Expanded(child: _Field(label: 'Provinsi', controller: _provinceController)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _Field(label: 'Kode Pos', controller: _postalCodeController, keyboardType: TextInputType.number)),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: isSaving ? null : _saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: isSaving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : const Text(
-                            'Save',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                  Row(
+                    children: [
+                      Expanded(child: _field(_province, 'Provinsi')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _field(_postal, 'Kode Pos')),
+                    ],
                   ),
-                ),
-                
-                const SizedBox(height: 20),
-              ],
+
+                  const Spacer(),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _save,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text('Simpan',
+                          style: TextStyle(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
             ),
     );
   }
-}
 
-/* ================= FIELD ================= */
-
-class _Field extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final TextInputType? keyboardType;
-  final bool enabled;
-
-  const _Field({
-    required this.label,
-    required this.controller,
-    this.keyboardType,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _field(TextEditingController c, String hint,
+      {bool enabled = true}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
+        controller: c,
         enabled: enabled,
         decoration: InputDecoration(
-          hintText: label,
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[600]),
           filled: true,
-          fillColor: enabled ? const Color(0xFFF5F5F5) : Colors.grey[200],
+          fillColor: Colors.grey[100],
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide.none,
           ),
         ),
       ),
     );
   }
-}
 
-/* ================= GENDER DROPDOWN ================= */
-
-class _GenderDropdown extends StatelessWidget {
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  const _GenderDropdown({
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _dateField() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            items: const [
-              DropdownMenuItem(value: 'male', child: Text('Male')),
-              DropdownMenuItem(value: 'female', child: Text('Female')),
-            ],
-            onChanged: (val) {
-              if (val != null) onChanged(val);
-            },
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: _birthDateController,
+        readOnly: true,
+        onTap: _pickBirthDate,
+        decoration: InputDecoration(
+          hintText: 'Tanggal Lahir',
+          filled: true,
+          fillColor: Colors.grey[100],
+          suffixIcon: const Icon(Icons.calendar_today, color: Colors.black),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
           ),
         ),
       ),
     );
   }
+
+  Widget _genderField() {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Theme(
+      data: Theme.of(context).copyWith(
+        canvasColor: Colors.grey[100], // background dropdown
+        colorScheme: const ColorScheme.light(
+          primary: Colors.black,
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: Colors.black,
+        ),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: selectedGender,
+        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+        dropdownColor: Colors.grey[100],
+        items: const [
+          DropdownMenuItem(
+            value: 'male',
+            child: Text('Laki-laki',
+                style: TextStyle(color: Colors.black)),
+          ),
+          DropdownMenuItem(
+            value: 'female',
+            child: Text('Perempuan',
+                style: TextStyle(color: Colors.black)),
+          ),
+        ],
+        onChanged: (v) => setState(() => selectedGender = v!),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey[100],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    ),
+  );
+}
 }
