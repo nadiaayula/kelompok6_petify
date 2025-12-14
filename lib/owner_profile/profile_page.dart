@@ -64,10 +64,24 @@ class _ProfilePageState extends State<ProfilePage> {
             onTap: () {
               showModalBottomSheet(
                 context: context,
+                backgroundColor: Colors.white,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                builder: (_) => const LanguageSheet(),
+                builder: (context) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.light(
+                        primary: Colors.black,
+                        onPrimary: Colors.white,
+                        surface: Colors.white,
+                        onSurface: Colors.black,
+                      ),
+                      canvasColor: Colors.white,
+                    ),
+                    child: const LanguageSheet(),
+                  );
+                },
               );
             },
           ),
@@ -109,19 +123,14 @@ class _Header extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          // BACK BUTTON ←
           Positioned(
             left: 16,
             top: 8,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-              onPressed: () {
-                Navigator.pop(context); // balik ke dashboard
-              },
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-
-          // TITLE
           const Center(
             child: Text(
               'Profil',
@@ -156,7 +165,7 @@ class _ProfileCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 18),
       child: Material(
-        elevation: 8,
+        elevation: 6,
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.all(18),
@@ -165,47 +174,44 @@ class _ProfileCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   CircleAvatar(
                     radius: 36,
                     backgroundColor: Colors.grey.shade200,
-                    backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                        ? NetworkImage(avatarUrl!)
-                        : const NetworkImage("https://placehold.co/200/png?text=A"),
+                    backgroundImage:
+                        avatarUrl != null && avatarUrl!.isNotEmpty
+                            ? NetworkImage(avatarUrl!)
+                            : null,
+                    child: avatarUrl == null
+                        ? const Icon(Icons.person, size: 36, color: Colors.grey)
+                        : null,
                   ),
                   const SizedBox(width: 14),
-
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        Text(name,
+                            style: const TextStyle(
+                                fontSize: 19, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 4),
                         Text(
                           "#56790 · 1.500 points",
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
+                              fontSize: 13, color: Colors.grey.shade600),
                         ),
                       ],
                     ),
                   ),
-
                   InkWell(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfilePage(),
+                        ),
                       );
                     },
                     borderRadius: BorderRadius.circular(10),
@@ -221,95 +227,17 @@ class _ProfileCard extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 12),
-
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 18, color: Colors.orange),
+                  const Icon(Icons.location_on_outlined,
+                      size: 18, color: Colors.black54),
                   const SizedBox(width: 4),
-                  Text(
-                    province,
-                    style: TextStyle(color: Colors.grey.shade700),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _ActionButton(
-                      text: 'Rewards',
-                      backgroundColor: const Color(0xFFE6E1FF),
-                      textColor: const Color(0xFF6A5AE0),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => RewardsPage()),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ActionButton(
-                      text: 'History',
-                      backgroundColor: const Color(0xFFFFF1D6),
-                      textColor: const Color(0xFFFF9800),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const HistoryPage(filter: HistoryFilter.all),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  Text(province,
+                      style: TextStyle(color: Colors.grey.shade700)),
                 ],
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/* ================= ACTION BUTTON ================= */
-
-class _ActionButton extends StatelessWidget {
-  final String text;
-  final Color backgroundColor;
-  final Color textColor;
-  final VoidCallback? onTap;
-
-  const _ActionButton({
-    required this.text,
-    required this.backgroundColor,
-    required this.textColor,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: FontWeight.w700,
-            ),
           ),
         ),
       ),
@@ -350,11 +278,15 @@ class _LanguageSheetState extends State<LanguageSheet> {
           const SizedBox(height: 12),
           ...langs.map(
             (l) => ListTile(
-              title: Text(l['name']!),
+              title: Text(l['name']!,
+                  style: const TextStyle(color: Colors.black)),
               trailing: selected == l['code']
-                  ? const Icon(Icons.check, color: Colors.orange)
+                  ? const Icon(Icons.check, color: Colors.black)
                   : null,
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                setState(() => selected = l['code']!);
+                Navigator.pop(context);
+              },
             ),
           ),
         ],
