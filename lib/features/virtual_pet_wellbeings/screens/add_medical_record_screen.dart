@@ -78,7 +78,7 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       print('🔍 Clinics response: $response');
 
       if (response != null) {
-        final List<Map<String, dynamic>> clinics = 
+        final List<Map<String, dynamic>> clinics =
             List<Map<String, dynamic>>.from(response);
         setState(() {
           _clinics = clinics;
@@ -205,7 +205,8 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
             onChanged: (Map<String, dynamic>? newValue) {
               setState(() {
                 _selectedPetId = newValue?['id'];
-                _weightController.text = (newValue?['weight_kg'] ?? '').toString();
+                _weightController.text =
+                    (newValue?['weight_kg'] ?? '').toString();
               });
             },
             items: _pets.map<DropdownMenuItem<Map<String, dynamic>>>(
@@ -341,7 +342,6 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
             ],
           ),
           const SizedBox(height: 12),
-
           _buildTextField(
             hint: 'Catatan medis',
             maxLines: 3,

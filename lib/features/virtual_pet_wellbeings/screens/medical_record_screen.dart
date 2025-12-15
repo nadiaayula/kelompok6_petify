@@ -258,10 +258,11 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
+                          onTap: () async {
+                            await Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const AddVaksinScreen()),
                             );
+                            _fetchRecords();
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(
@@ -284,10 +285,11 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {
-                            Navigator.of(context).push(
+                          onTap: () async {
+                            await Navigator.of(context).push(
                               MaterialPageRoute(builder: (_) => const AddMedicalRecordScreen()),
                             );
+                            _fetchRecords();
                           },
                           borderRadius: BorderRadius.circular(16),
                           child: SizedBox(

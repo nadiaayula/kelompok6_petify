@@ -352,16 +352,14 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     });
 
     try {
-      // Step 1: Prepare Vaccination Record
       final vaccinationRecord = {
         'pet_id': _selectedPetId,
         'vaccination_date': _selectedDate!.toIso8601String(),
         'vaccine_name': _selectedVaksin,
         'medical_notes': _medicalNotesController.text,
-        'clinic_id': _selectedClinic!['id'], // Use the obtained clinic_id
+        'clinic_id': _selectedClinic!['id'],
       };
 
-      // Step 2: Insert Vaccination Record
       await Supabase.instance.client.from('vaccination_records').insert(vaccinationRecord);
 
       if (!mounted) return;
@@ -491,7 +489,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     ).then((vaksin) {
       if (vaksin != null) {
         setState(() {
-          _selectedVaksin = vaksin;
+          _selectedVaksin = 'Vaksin $vaksin';
         });
       }
     });
