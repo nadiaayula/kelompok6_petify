@@ -117,6 +117,37 @@ class _CalendarModalState extends State<CalendarModal> {
           _buildCalendarGrid(),
           
           const SizedBox(height: 24),
+
+          // Today button
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: OutlinedButton(
+              onPressed: () {
+                setState(() {
+                  _currentMonth = DateTime.now();
+                  _selectedDay = DateTime.now().day;
+                });
+              },
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFFF6B6B)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+              ),
+              child: const Text(
+                'Hari Ini',
+                style: TextStyle(
+                  fontFamily: 'PlusJakartaSans',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFFF6B6B),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
           
           // Submit button
           SizedBox(
@@ -195,6 +226,11 @@ class _CalendarModalState extends State<CalendarModal> {
   }
 
   Widget _buildDayCell(int day, {bool isOtherMonth = false}) {
+    final now = DateTime.now();
+    final isToday = !isOtherMonth &&
+        day == now.day &&
+        _currentMonth.month == now.month &&
+        _currentMonth.year == now.year;
     bool isSelected = _selectedDay == day && !isOtherMonth;
 
     return GestureDetector(
@@ -207,7 +243,11 @@ class _CalendarModalState extends State<CalendarModal> {
             },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFF6B6B) : Colors.transparent,
+          color: isSelected
+              ? const Color(0xFFFF6B6B)
+              : isToday
+                  ? const Color(0xFFFFF0F0) // Light red for today
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
@@ -216,12 +256,14 @@ class _CalendarModalState extends State<CalendarModal> {
             style: TextStyle(
               fontFamily: 'PlusJakartaSans',
               fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: isSelected || isToday ? FontWeight.w700 : FontWeight.w500,
               color: isOtherMonth
                   ? const Color(0xFFD0D0D0)
                   : isSelected
                       ? Colors.white
-                      : Colors.black87,
+                      : isToday
+                          ? const Color(0xFFFF6B6B) // Red text for today
+                          : Colors.black87,
             ),
           ),
         ),

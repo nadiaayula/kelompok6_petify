@@ -17,17 +17,32 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _pets = [];
   String? _selectedPetId;
+  List<Map<String, dynamic>> _clinics = [];
+  Map<String, dynamic>? _selectedClinic;
   String _selectedCountryCode = '🇮🇩';
 
   final _medicalNotesController = TextEditingController();
-  final _clinicNameController = TextEditingController();
-  final _doctorNameController = TextEditingController();
-  final _clinicPhoneController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchPets();
+    _fetchClinics();
+  }
+
+  Future<void> _fetchClinics() async {
+    try {
+      final response = await Supabase.instance.client.from('clinic').select();
+      setState(() {
+        _clinics = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching clinics: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data klinik: $e')),
+      );
+    }
   }
 
   Future<void> _fetchPets() async {
@@ -63,9 +78,6 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   @override
   void dispose() {
     _medicalNotesController.dispose();
-    _clinicNameController.dispose();
-    _doctorNameController.dispose();
-    _clinicPhoneController.dispose();
     super.dispose();
   }
 
@@ -201,14 +213,51 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           ),
           const SizedBox(height: 15),
 
-          _buildTextField(hint: 'Nama Klinik', controller: _clinicNameController),
-          const SizedBox(height: 12),
+          DropdownButtonFormField<Map<String, dynamic>>(
+            value: _selectedClinic,
+            hint: const Text('Pilih Klinik'),
+            onChanged: (Map<String, dynamic>? newValue) {
+              setState(() {
+                _selectedClinic = newValue;
+              });
+            },
+            items: _clinics.map<DropdownMenuItem<Map<String, dynamic>>>((Map<String, dynamic> clinic) {
+              return DropdownMenuItem<Map<String, dynamic>>(
+                value: clinic,
+                child: Text(clinic['name']),
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
 
-          _buildTextField(hint: 'Nama dokter atau perawat', controller: _doctorNameController),
-          const SizedBox(height: 12),
+          if (_selectedClinic != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Dokter: ${_selectedClinic!['doctor_name'] ?? '-'}'),
+                  const SizedBox(height: 4),
+                  Text('Telepon: ${_selectedClinic!['phone'] ?? '-'}'),
+                ],
+              ),
+            )
+          ],
 
-          _buildPhoneField(),
           const SizedBox(height: 25),
+
 
           Row(
             children: [
@@ -291,28 +340,26 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       );
       return;
     }
+    if (_selectedClinic == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih klinik.')),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Step 1: Get or Insert Clinic ID
-      final clinicId = await _getOrInsertClinicId();
-      if (clinicId == null && _clinicNameController.text.isNotEmpty) {
-        throw Exception('Gagal membuat atau menemukan klinik.');
-      }
-
-      // Step 2: Prepare Vaccination Record
       final vaccinationRecord = {
         'pet_id': _selectedPetId,
         'vaccination_date': _selectedDate!.toIso8601String(),
         'vaccine_name': _selectedVaksin,
         'medical_notes': _medicalNotesController.text,
-        'clinic_id': clinicId, // Use the obtained clinic_id
+        'clinic_id': _selectedClinic!['id'],
       };
 
-      // Step 3: Insert Vaccination Record
       await Supabase.instance.client.from('vaccination_records').insert(vaccinationRecord);
 
       if (!mounted) return;
@@ -332,46 +379,6 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  Future<String?> _getOrInsertClinicId() async {
-    final clinicName = _clinicNameController.text.trim();
-    final doctorName = _doctorNameController.text.trim();
-    final clinicPhone = _clinicPhoneController.text.trim();
-
-    if (clinicName.isEmpty) {
-      return null;
-    }
-
-    try {
-      // Check if clinic exists
-      final response = await Supabase.instance.client
-          .from('clinics')
-          .select('id')
-          .eq('name', clinicName)
-          .limit(1);
-
-      if (response.isNotEmpty) {
-        return response[0]['id'] as String;
-      } else {
-        // Insert new clinic
-        final newClinic = {
-          'name': clinicName,
-          'doctor_name': doctorName.isNotEmpty ? doctorName : null,
-          'phone': clinicPhone.isNotEmpty ? clinicPhone : null,
-        };
-        final insertResponse = await Supabase.instance.client
-            .from('clinics')
-            .insert(newClinic)
-            .select('id')
-            .single();
-
-        return insertResponse['id'] as String;
-      }
-    } catch (e) {
-      print('Error in _getOrInsertClinicId: $e');
-      return null;
     }
   }
 
@@ -417,60 +424,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
-  Widget _buildPhoneField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white, // tetap putih
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  _selectedCountryCode,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TextField(
-              controller: _clinicPhoneController,
-              style: const TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Colors.black, // ubah ke hitam
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Nomor klinik',
-                hintStyle: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFB7B7B7), // ubah ke B7B7B7
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 0,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildActionButton({
     required IconData icon,
@@ -535,7 +489,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     ).then((vaksin) {
       if (vaksin != null) {
         setState(() {
-          _selectedVaksin = vaksin;
+          _selectedVaksin = 'Vaksin $vaksin';
         });
       }
     });

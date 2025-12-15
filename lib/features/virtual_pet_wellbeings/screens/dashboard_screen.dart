@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:kelompok6_adoptify/owner_profile/profile_page.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
+import 'package:kelompok6_adoptify/features/rewards/screens/rewards_page.dart';
 
 // =============================
 // 1. PET MODEL
@@ -261,14 +262,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                     const SizedBox(height: 24),
 
-                    Text(
-                      "Rewards Point",
-                      style: GoogleFonts.plusJakartaSans(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "Tukar poin dengan reward yang kamu mau!",
-                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const RewardsPage()),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Rewards Point",
+                            style: GoogleFonts.plusJakartaSans(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            "Tukar poin dengan reward yang kamu mau!",
+                            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 
