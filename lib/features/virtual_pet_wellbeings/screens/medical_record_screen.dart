@@ -9,20 +9,18 @@ import 'package:intl/intl.dart';
 class MedicalRecord {
   final String id;
   final String petId;
-  final String petName; // From pets table
-  final String petSpecies; // From pets table, for filtering
-  final String? petImageUrl; // From pets table
+  final String petName;
+  final String petSpecies;
+  final String? petImageUrl;
   final String title;
-  final DateTime recordDate; // Changed from String date to DateTime
-  final String? clinicName; // From medical_records
-  final String? doctorName; // From medical_records
-  final String recordType; // 'medical' or 'vaccination'
+  final DateTime recordDate;
+  final String? clinicName;
+  final String? doctorName;
+  final String recordType;
   final String? medicalNotes;
-  final String? healthCondition; // From medical_records
-  final double? petWeightKg; // From medical_records
-  final bool? hasXray; // From medical_records
-  final String? vaccineName; // From vaccination_records
-
+  final String? healthCondition;
+  final bool? hasXray;
+  final String? vaccineName;
   MedicalRecord({
     required this.id,
     required this.petId,
@@ -36,7 +34,6 @@ class MedicalRecord {
     required this.recordType,
     this.medicalNotes,
     this.healthCondition,
-    this.petWeightKg,
     this.hasXray,
     this.vaccineName,
   });
@@ -95,12 +92,13 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       // Fetch Medical Records
       final medicalResponse = await Supabase.instance.client
           .from('medical_records')
-          .select('*, pets(name, species, image_url)')
+          .select('*, pets(name, species, image_url), clinic(name, doctor_name)')
           .eq('pets.owner_id', userId)
           .order('visit_date', ascending: false);
 
       List<MedicalRecord> medicalRecords = (medicalResponse as List).map((data) {
         final petData = data['pets'] as Map<String, dynamic>;
+        final clinicData = data['clinic'] as Map<String, dynamic>?;
         return MedicalRecord(
           id: data['id'],
           petId: data['pet_id'],
@@ -108,13 +106,12 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           petSpecies: petData['species'],
           petImageUrl: petData['image_url'],
           title: 'Pemeriksaan Medis', // Generic title for medical records
-          recordDate: DateTime.parse(data['created_at']), // Use created_at for time
-          clinicName: data['clinic_name'],
-          doctorName: data['doctor_name'],
+          recordDate: DateTime.parse(data['visit_date']), // Use visit_date
+          clinicName: clinicData?['name'],
+          doctorName: clinicData?['doctor_name'],
           recordType: 'medical',
           medicalNotes: data['medical_notes'],
           healthCondition: data['pet_health_condition'],
-          petWeightKg: (data['pet_weight_kg'] as num?)?.toDouble(),
           hasXray: data['has_xray'],
         );
       }).toList();
