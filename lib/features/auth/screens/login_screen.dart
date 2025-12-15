@@ -146,214 +146,243 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/kucing1.png'), // Ganti dengan path gambar Anda
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
-              BlendMode.darken,
+      body: Stack(
+        children: [
+          // Background Image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: const AssetImage('assets/images/kucing_login.png'),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.3),
+                  BlendMode.darken,
+                ),
+              ),
             ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // AppBar
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline, color: Colors.white),
-                      onPressed: () {
-                        // Tampilkan informasi
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: Container(),
-              ),
-
-              // Bottom Sheet
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
+          
+          // AppBar
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.info_outline, color: Colors.white),
+                    onPressed: () {
+                      // Tampilkan informasi
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Bottom Sheet (Half Screen)
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              constraints: BoxConstraints(
+                maxHeight: screenHeight * 0.7, // Maksimal 70% dari tinggi layar
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
                 ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 10),
-                          const Text(
-                            'Masuk',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                            textAlign: TextAlign.center,
+              ),
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Masuk',
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
-                          const SizedBox(height: 40),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 28),
 
-                          // Input E-mail
-                          _buildTextField(
-                            controller: _emailController,
-                            icon: Icons.person_outline,
-                            hintText: 'E-mail',
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'E-mail harus diisi';
-                              }
-                              if (!value.contains('@')) {
-                                return 'E-mail tidak valid';
-                              }
-                              return null;
+                        // Input E-mail
+                        _buildTextField(
+                          controller: _emailController,
+                          icon: Icons.person_outline,
+                          hintText: 'E-mail',
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'E-mail harus diisi';
+                            }
+                            if (!value.contains('@')) {
+                              return 'E-mail tidak valid';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Input Kata Sandi
+                        _buildTextField(
+                          controller: _passwordController,
+                          icon: Icons.lock_outline,
+                          hintText: 'Kata sandi',
+                          obscureText: !_isPasswordVisible,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
                             },
                           ),
-                          const SizedBox(height: 20),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Kata sandi harus diisi';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 10),
 
-                          // Input Kata Sandi
-                          _buildTextField(
-                            controller: _passwordController,
-                            icon: Icons.lock_outline,
-                            hintText: 'Kata sandi',
-                            obscureText: !_isPasswordVisible,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
+                        // Lupa Kata Sandi
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: GestureDetector(
+                            onTap: _handleForgotPassword,
+                            child: const Text(
+                              'Lupa kata sandi?',
+                              style: TextStyle(
                                 color: Colors.grey,
+                                fontSize: 13,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Kata sandi harus diisi';
-                              }
-                              return null;
-                            },
                           ),
-                          const SizedBox(height: 15),
+                        ),
+                        const SizedBox(height: 20),
 
-                          // Lupa Kata Sandi
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: GestureDetector(
-                              onTap: _handleForgotPassword,
+                        // Tombol Masuk
+                        ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                        const SizedBox(height: 14),
+                        
+                        // Belum punya akun
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Belum punya akun? ',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: _navigateToRegister,
                               child: const Text(
-                                'Lupa kata sandi?',
+                                'Daftar',
                                 style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange,
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 30),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
 
-                          // Tombol Masuk
-                          ElevatedButton(
-                            onPressed: _isLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              elevation: 0,
+                        // Atau Lanjutkan Dengan
+                        const Text(
+                          'atau lanjutkan dengan',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Social Login Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildSocialButton(
+                              icon: Icons.g_mobiledata,
+                              color: const Color(0xFFDB4437),
+                              onTap: _handleGoogleSignIn,
                             ),
-                            child: _isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text(
-                                    'Masuk',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Belum punya akun?'),
-                              TextButton(
-                                onPressed: _navigateToRegister,
-                                child: const Text('Daftar'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Atau Lanjutkan Dengan
-                          const Text(
-                            'atau lanjutkan dengan',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
+                            const SizedBox(width: 14),
+                            _buildSocialButton(
+                              icon: Icons.facebook,
+                              color: const Color(0xFF1877F2),
+                              onTap: () => _handleSocialLogin('Meta'),
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 25),
-
-                          // Social Login Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildSocialButton(
-                                icon: Icons.g_mobiledata,
-                                color: const Color(0xFFDB4437),
-                                onTap: _handleGoogleSignIn,
-                              ),
-                              const SizedBox(width: 20),
-                              _buildSocialButton(
-                                icon: Icons.facebook,
-                                color: const Color(0xFF1877F2),
-                                onTap: () => _handleSocialLogin('Meta'),
-                              ),
-                              const SizedBox(width: 20),
-                              _buildSocialButton(
-                                icon: Icons.phone,
-                                color: const Color(0xFF25D366),
-                                onTap: () => _handleSocialLogin('WhatsApp'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                        ],
-                      ),
+                            const SizedBox(width: 14),
+                            _buildSocialButton(
+                              icon: Icons.phone,
+                              color: const Color(0xFF25D366),
+                              onTap: () => _handleSocialLogin('WhatsApp'),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
