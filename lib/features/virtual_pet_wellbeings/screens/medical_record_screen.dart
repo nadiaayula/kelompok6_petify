@@ -175,7 +175,11 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       final typeMatches = _animalFilter == 'all' || record.petSpecies == _animalFilter;
       // Filter by petName as well
       final petNameLower = record.petName.toLowerCase();
-      return (titleLower.contains(searchQueryLower) || petNameLower.contains(searchQueryLower)) && typeMatches;
+      return (
+        titleLower.contains(searchQueryLower) || 
+        petNameLower.contains(searchQueryLower) ||
+        (record.recordType == 'vaccination' && 'vaksin'.contains(searchQueryLower))
+      ) && typeMatches;
     }).toList();
 
     // 4. GROUPING AND BUILDING LIST ITEMS
