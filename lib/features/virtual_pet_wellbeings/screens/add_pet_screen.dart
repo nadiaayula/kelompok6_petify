@@ -72,11 +72,13 @@ class _AddPetScreenState extends State<AddPetScreen> {
       'photos': _selectedPhotos,
     };
 
-    // sementara print dulu (nanti kamu ganti jadi insert supabase)
     debugPrint('ADD PET: $payload');
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Peliharaan berhasil ditambahkan!'), backgroundColor: Colors.green),
+      const SnackBar(
+        content: Text('Peliharaan berhasil ditambahkan!'),
+        backgroundColor: Colors.green,
+      ),
     );
 
     Navigator.pop(context, true);
@@ -106,7 +108,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ================== KATEGORI HEWAN ==================
+            // ================== KATEGORI HEWAN (GAMBAR ONLY) ==================
             const Text(
               'Kategori hewan',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
@@ -118,23 +120,14 @@ class _AddPetScreenState extends State<AddPetScreen> {
             ),
             const SizedBox(height: 18),
 
-            GridView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.8,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                PetTypeCard(
+                PetImageSelector(
                   title: 'Kucing',
-                  selected: _selectedPetType == 'Kucing',
-                  imageIdle: 'assets/images/cat_idle.png', 
-                  imageSelected: 'assets/images/cat_selected.png',
-                  selectedBg: const Color(0xFFFFE7C2),
-                  unselectedBg: const Color(0xFFF2F2F2),
+                  isSelected: _selectedPetType == 'Kucing',
+                  idleImage: 'assets/images/cat_idle.png',
+                  selectedImage: 'assets/images/cat_selected.png',
                   onTap: () {
                     setState(() {
                       _selectedPetType = 'Kucing';
@@ -142,13 +135,11 @@ class _AddPetScreenState extends State<AddPetScreen> {
                     });
                   },
                 ),
-                PetTypeCard(
+                PetImageSelector(
                   title: 'Anjing',
-                  selected: _selectedPetType == 'Anjing',
-                  imageIdle: 'assets/images/dog_idle.png', 
-                  imageSelected: 'assets/images/dog_selected.png',
-                  selectedBg: const Color(0xFFFFE7C2),
-                  unselectedBg: const Color(0xFFF2F2F2),
+                  isSelected: _selectedPetType == 'Anjing',
+                  idleImage: 'assets/images/dog_idle.png',
+                  selectedImage: 'assets/images/dog_selected.png',
                   onTap: () {
                     setState(() {
                       _selectedPetType = 'Anjing';
@@ -198,13 +189,9 @@ class _AddPetScreenState extends State<AddPetScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: _genderButton('Jantan'),
-                ),
+                Expanded(child: _genderButton('Jantan')),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _genderButton('Betina'),
-                ),
+                Expanded(child: _genderButton('Betina')),
               ],
             ),
 
@@ -227,17 +214,11 @@ class _AddPetScreenState extends State<AddPetScreen> {
             const SizedBox(height: 26),
 
             // ================== FOTO (dummy) ==================
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'Foto peliharaanmu',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-                ),
-              ],
+            const Text(
+              'Foto peliharaanmu',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
             ),
             const SizedBox(height: 12),
-
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -256,7 +237,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -283,7 +263,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: hasPhoto ? Colors.transparent : Colors.grey.shade300,
-                              style: hasPhoto ? BorderStyle.solid : BorderStyle.solid,
                             ),
                           ),
                           child: Center(
@@ -296,7 +275,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
                       );
                     },
                   ),
-
                   const SizedBox(height: 10),
                   const Text('Maksimal 5 foto', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
@@ -341,6 +319,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -416,23 +395,19 @@ class _AddPetScreenState extends State<AddPetScreen> {
   }
 }
 
-class PetTypeCard extends StatelessWidget {
+class PetImageSelector extends StatelessWidget {
   final String title;
-  final bool selected;
-  final String imageIdle;
-  final String imageSelected;
-  final Color selectedBg;
-  final Color unselectedBg;
+  final bool isSelected;
+  final String idleImage;
+  final String selectedImage;
   final VoidCallback onTap;
 
-  const PetTypeCard({
+  const PetImageSelector({
     super.key,
     required this.title,
-    required this.selected,
-    required this.imageIdle,
-    required this.imageSelected,
-    required this.selectedBg,
-    required this.unselectedBg,
+    required this.isSelected,
+    required this.idleImage,
+    required this.selectedImage,
     required this.onTap,
   });
 
@@ -440,46 +415,19 @@ class PetTypeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? selectedBg : unselectedBg,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 5,
-              child: Image.asset(
-                selected ? imageSelected : imageIdle,
-                fit: BoxFit.contain,
-              ),
+      child: Column(
+        children: [
+          AnimatedScale(
+            scale: isSelected ? 1.06 : 1.0,
+            duration: const Duration(milliseconds: 180),
+            child: Image.asset(
+              isSelected ? selectedImage : idleImage,
+              width: 150,
+              height: 150,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 4,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Virtual\nWellbeings',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
