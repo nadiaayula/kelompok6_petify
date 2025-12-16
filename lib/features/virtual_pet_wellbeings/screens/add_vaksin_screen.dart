@@ -14,6 +14,7 @@ class AddVaksinScreen extends StatefulWidget {
 class _AddVaksinScreenState extends State<AddVaksinScreen> {
   DateTime? _selectedDate;
   String? _selectedVaksin;
+  String? _selectedVaksinImage;
   bool _isLoading = false;
   List<Map<String, dynamic>> _pets = [];
   String? _selectedPetId;
@@ -281,6 +282,14 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          if (_selectedVaksinImage != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Image.asset(
+                _selectedVaksinImage!,
+                height: 100, // You can adjust the height as needed
+              ),
+            ),
 
           _buildTextField(
             hint: 'Catatan medis',
@@ -486,10 +495,17 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => const JenisVaksinasiModal(),
-    ).then((vaksin) {
-      if (vaksin != null) {
+    ).then((result) {
+      if (result != null && result is Map<String, String>) {
         setState(() {
-          _selectedVaksin = 'Vaksin $vaksin';
+          _selectedVaksin = result['name'];
+          if (result['category'] == 'Vaksin Anjing') {
+            _selectedVaksinImage = 'assets/images/iconanjingmed.png';
+          } else if (result['category'] == 'Vaksin Kucing') {
+            _selectedVaksinImage = 'assets/images/iconkucingmed.png';
+          } else {
+            _selectedVaksinImage = null; // Clear if category is not dog or cat
+          }
         });
       }
     });
