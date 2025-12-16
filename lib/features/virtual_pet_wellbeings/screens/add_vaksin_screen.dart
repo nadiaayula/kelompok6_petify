@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../common/widgets/calendar_modal.dart';
 import '../../../common/widgets/shortcut_page.dart';
+import '../../../common/widgets/success_dialog.dart';
+import '../../../common/widgets/failure_dialog.dart';
 import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
@@ -372,15 +374,27 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       await Supabase.instance.client.from('vaccination_records').insert(vaccinationRecord);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Catatan vaksinasi berhasil disimpan!')),
+      showDialog(
+        context: context,
+        builder: (context) => SuccessDialog(
+          title: 'Berhasil',
+          content: 'Vaksin berhasil ditambahkan',
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        ),
       );
-      Navigator.pop(context);
+
 
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan catatan: $e')),
+      showDialog(
+        context: context,
+        builder: (context) => const FailureDialog(
+          title: 'Gagal',
+          content: 'Vaksin gagal ditambahkan',
+        ),
       );
     } finally {
       if (mounted) {
