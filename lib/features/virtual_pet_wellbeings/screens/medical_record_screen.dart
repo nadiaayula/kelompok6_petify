@@ -119,12 +119,13 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
       // Fetch Vaccination Records
       final vaccinationResponse = await Supabase.instance.client
           .from('vaccination_records')
-          .select('*, pets(name, species, image_url)')
+          .select('*, pets(name, species, image_url), clinic(name)')
           .eq('pets.owner_id', userId)
           .order('vaccination_date', ascending: false);
 
       List<MedicalRecord> vaccinationRecords = (vaccinationResponse as List).map((data) {
         final petData = data['pets'] as Map<String, dynamic>;
+        final clinicData = data['clinic'] as Map<String, dynamic>?;
         return MedicalRecord(
           id: data['id'],
           petId: data['pet_id'],
@@ -136,6 +137,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           recordType: 'vaccination',
           medicalNotes: data['medical_notes'],
           vaccineName: data['vaccine_name'],
+          clinicName: clinicData?['name'],
         );
       }).toList();
 
@@ -486,15 +488,13 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
     String subtitleText;
     String formattedDate;
 
+    subtitleText = item.clinicName != null && item.clinicName!.isNotEmpty
+        ? item.clinicName!
+        : 'Klinik tidak diketahui';
+
     if (item.recordType == 'medical') {
-      subtitleText = item.clinicName != null && item.clinicName!.isNotEmpty
-          ? item.clinicName!
-          : 'Klinik tidak diketahui';
       formattedDate = DateFormat('dd MMMM yyyy · hh:mm a', 'id_ID').format(item.recordDate);
     } else { // vaccination
-      subtitleText = item.medicalNotes != null && item.medicalNotes!.isNotEmpty
-          ? item.medicalNotes!
-          : 'Tanpa catatan tambahan';
       // For vaccination, show only the date part to avoid "12:00 AM"
       formattedDate = DateFormat('dd MMMM yyyy', 'id_ID').format(item.recordDate);
     }
