@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/vpm_home_screen.dart'; // Import VPMHomeScreen
 
 class ShortcutPage extends StatelessWidget {
   const ShortcutPage({Key? key}) : super(key: key);
@@ -32,7 +33,9 @@ class ShortcutPage extends StatelessWidget {
                 context,
                 imagePath: 'assets/images/scvirtual.png',
                 onTap: () {
-                  // TODO: Navigate to Virtual Wellbeings screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const VpmHomeScreen()), // Navigate to VPMHomeScreen
+                  );
                 },
               ),
               
@@ -43,7 +46,11 @@ class ShortcutPage extends StatelessWidget {
                 context,
                 imagePath: 'assets/images/scfoster.png',
                 onTap: () {
-                  // TODO: Navigate to Foster screen
+                  // TODO: Navigate to Foster screen - Placeholder, actual screen not found.
+                  // For now, navigating to DashboardScreen. Please update when Foster screen is identified.
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
+                  );
                 },
               ),
               
@@ -54,7 +61,9 @@ class ShortcutPage extends StatelessWidget {
                 context,
                 imagePath: 'assets/images/scmedical.png',
                 onTap: () {
-                  // TODO: Navigate to Medical Check screen
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const MedicalRecordScreen()),
+                  );
                 },
               ),
               
