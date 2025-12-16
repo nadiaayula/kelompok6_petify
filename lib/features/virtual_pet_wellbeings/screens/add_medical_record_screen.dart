@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../common/widgets/calendar_modal.dart';
 import '../../../common/widgets/shortcut_page.dart';
+import '../../../common/widgets/success_dialog.dart';
+import '../../../common/widgets/failure_dialog.dart';
 
 class AddMedicalRecordScreen extends StatefulWidget {
   const AddMedicalRecordScreen({super.key});
@@ -431,14 +433,25 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
           .insert(medicalRecord);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Catatan medis berhasil disimpan!')),
+      showDialog(
+        context: context,
+        builder: (context) => SuccessDialog(
+          title: 'Berhasil',
+          content: 'Medical record berhasil ditambahkan',
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        ),
       );
-      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan catatan: $e')),
+      showDialog(
+        context: context,
+        builder: (context) => const FailureDialog(
+          title: 'Gagal',
+          content: 'Medical record gagal ditambahkan',
+        ),
       );
     } finally {
       if (mounted) {
