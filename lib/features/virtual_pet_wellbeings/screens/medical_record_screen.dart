@@ -526,7 +526,7 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.title,
+                  item.recordType == 'vaccination' ? 'Vaksin ${item.title}' : item.title,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
