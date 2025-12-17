@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Wajib ada
 
 class AddPetScreen extends StatefulWidget {
   const AddPetScreen({super.key});
@@ -13,6 +14,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
   String? _selectedGender; // 'Jantan' / 'Betina'
   int? _ageMonths;
   int? _ageYears;
+  bool _isLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
 
@@ -59,53 +61,74 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 
-  void _submit() {
+  // FUNGSI SIMPAN KE SUPABASE
+  Future<void> _submit() async {
     if (!_validateForm()) return;
 
-    final payload = {
-      'type': _selectedPetType,
-      'breed': _selectedBreed,
-      'name': _nameController.text.trim(),
-      'gender': _selectedGender,
-      'ageMonths': _ageMonths,
-      'ageYears': _ageYears,
-      'photos': _selectedPhotos,
-    };
+    setState(() => _isLoading = true);
 
-    debugPrint('ADD PET: $payload');
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) throw 'User tidak ditemukan. Silakan login kembali.';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Peliharaan berhasil ditambahkan!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // LOGIKA TANGGAL LAHIR: Hitung mundur dari sekarang
+      // Misal user input 1 Tahun 2 Bulan, maka birthDate = sekarang - 1 thn - 2 bln
+      final now = DateTime.now();
+      final birthDate = DateTime(
+        now.year - (_ageYears ?? 0),
+        now.month - (_ageMonths ?? 0),
+        now.day,
+      );
 
-    Navigator.pop(context, true);
+      // INSERT KE TABEL 'pets'
+      await Supabase.instance.client.from('pets').insert({
+        'owner_id': user.id, // ID User yang login
+        'name': _nameController.text.trim(),
+        'species': _selectedPetType, // 'Kucing' / 'Anjing'
+        'breed': _selectedBreed,
+        'gender': _selectedGender,
+        'birth_date': birthDate.toIso8601String(), // Format yang dimengerti SQL
+        'weight_kg': 0.0, // Bisa ditambah input di UI nanti
+        'image_url': _selectedPetType == 'Kucing' 
+            ? 'assets/images/icon_cat_main.png' 
+            : 'assets/images/icon_dog_main.png',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Peliharaan berhasil ditambahkan!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Kembali ke Home dengan membawa nilai 'true' untuk trigger refresh otomatis
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      debugPrint('ERROR ADD PET: $e');
+      _showError('Gagal menyimpan: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
         centerTitle: true,
         leading: Padding(
-          padding: const EdgeInsets.all(8.0), // Beri sedikit ruang agar tidak terlalu mepet
+          padding: const EdgeInsets.all(8.0),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.grey[100], // Warna background abu-abu muda
-              borderRadius: BorderRadius.circular(12), // Kelengkungan sudut kotak
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_new, // Gunakan icon yang sama dengan home
-                color: Colors.grey, // Warna icon abu-abu
-                size: 20,
-              ),
+              icon: const Icon(Icons.arrow_back_ios_new, color: Colors.grey, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -115,214 +138,131 @@ class _AddPetScreenState extends State<AddPetScreen> {
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
         ),
       ),
-
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ================== KATEGORI HEWAN (GAMBAR ONLY) ==================
-            const Text(
-              'Kategori hewan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Pilih hewan yang ingin ditambahkan',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 18),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PetImageSelector(
-                  title: 'Kucing',
-                  isSelected: _selectedPetType == 'Kucing',
-                  idleImage: 'assets/images/cat_idle.png',
-                  selectedImage: 'assets/images/cat_selected.png',
-                  onTap: () {
-                    setState(() {
-                      _selectedPetType = 'Kucing';
-                      _selectedBreed = null;
-                    });
-                  },
+                const Text(
+                  'Kategori hewan',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
                 ),
-                PetImageSelector(
-                  title: 'Anjing',
-                  isSelected: _selectedPetType == 'Anjing',
-                  idleImage: 'assets/images/dog_idle.png',
-                  selectedImage: 'assets/images/dog_selected.png',
-                  onTap: () {
-                    setState(() {
-                      _selectedPetType = 'Anjing';
-                      _selectedBreed = null;
-                    });
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 26),
-
-            // ================== RAS/JENIS ==================
-            const Text(
-              'Ras atau jenis',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 12),
-            _dropdownBox<String>(
-              value: _selectedBreed,
-              hint: _selectedPetType == null ? 'Pilih kategori hewan dulu' : 'Pilih ras/jenis',
-              enabled: _selectedPetType != null,
-              items: _getAvailableBreeds(),
-              onChanged: (val) => setState(() => _selectedBreed = val),
-            ),
-
-            const SizedBox(height: 26),
-
-            // ================== NAMA ==================
-            const Text(
-              'Nama peliharaanmu',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _nameController,
-              decoration: _inputDecoration('Nama'),
-            ),
-
-            const SizedBox(height: 26),
-
-            // ================== GENDER ==================
-            const Text(
-              'Jenis kelamin peliharaanmu',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _genderButton('Jantan')),
-                const SizedBox(width: 12),
-                Expanded(child: _genderButton('Betina')),
-              ],
-            ),
-
-            const SizedBox(height: 26),
-
-            // ================== UMUR ==================
-            const Text(
-              'Umur peliharaanmu',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _ageDropdown(unit: 'Bulan')),
-                const SizedBox(width: 12),
-                Expanded(child: _ageDropdown(unit: 'Tahun')),
-              ],
-            ),
-
-            const SizedBox(height: 26),
-
-            // ================== FOTO (dummy) ==================
-            const Text(
-              'Foto peliharaanmu',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Utama', style: TextStyle(fontWeight: FontWeight.w700)),
-                      Text('${_selectedPhotos.length} dari 5', style: const TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    PetImageSelector(
+                      title: 'Kucing',
+                      isSelected: _selectedPetType == 'Kucing',
+                      idleImage: 'assets/images/cat_idle.png',
+                      selectedImage: 'assets/images/cat_selected.png',
+                      onTap: () {
+                        setState(() {
+                          _selectedPetType = 'Kucing';
+                          _selectedBreed = null;
+                        });
+                      },
                     ),
-                    itemCount: 5,
-                    itemBuilder: (context, index) {
-                      final hasPhoto = index < _selectedPhotos.length;
-
-                      return GestureDetector(
-                        onTap: () {
-                          if (_selectedPhotos.length < 5) {
-                            setState(() {
-                              _selectedPhotos.add('photo_${_selectedPhotos.length + 1}');
-                            });
-                          }
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: hasPhoto ? Colors.transparent : Colors.grey.shade300,
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              hasPhoto ? Icons.image : Icons.add,
-                              color: Colors.grey,
-                            ),
-                          ),
+                    PetImageSelector(
+                      title: 'Anjing',
+                      isSelected: _selectedPetType == 'Anjing',
+                      idleImage: 'assets/images/dog_idle.png',
+                      selectedImage: 'assets/images/dog_selected.png',
+                      onTap: () {
+                        setState(() {
+                          _selectedPetType = 'Anjing';
+                          _selectedBreed = null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Ras atau jenis',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+                const SizedBox(height: 12),
+                _dropdownBox<String>(
+                  value: _selectedBreed,
+                  hint: _selectedPetType == null ? 'Pilih kategori hewan dulu' : 'Pilih ras/jenis',
+                  enabled: _selectedPetType != null,
+                  items: _getAvailableBreeds(),
+                  onChanged: (val) => setState(() => _selectedBreed = val),
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Nama peliharaanmu',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _nameController,
+                  decoration: _inputDecoration('Nama'),
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Jenis kelamin peliharaanmu',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _genderButton('Jantan')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _genderButton('Betina')),
+                  ],
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Umur peliharaanmu',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _ageDropdown(unit: 'Bulan')),
+                    const SizedBox(width: 12),
+                    Expanded(child: _ageDropdown(unit: 'Tahun')),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFA726),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                      elevation: 0,
+                    ),
+                    child: _isLoading 
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Tambahkan',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
-                      );
-                    },
                   ),
-                  const SizedBox(height: 10),
-                  const Text('Maksimal 5 foto', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // ================== BUTTON ==================
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFA726),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                  elevation: 0,
                 ),
-                child: const Text(
-                  'Tambahkan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
-                ),
-              ),
+                const SizedBox(height: 18),
+              ],
             ),
-
-            const SizedBox(height: 18),
-          ],
-        ),
+          ),
+          // Loading Overlay jika sedang submit
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.1),
+              child: const Center(child: CircularProgressIndicator(color: Colors.orange)),
+            ),
+        ],
       ),
     );
   }
 
-  // ================== UI HELPERS ==================
-
+  // UI HELPERS (tetap sama)
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
@@ -357,7 +297,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
   Widget _genderButton(String gender) {
     final selected = _selectedGender == gender;
-
     return GestureDetector(
       onTap: () => setState(() => _selectedGender = gender),
       child: Container(
@@ -367,7 +306,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? const Color(0xFFFFA726) : Colors.grey.shade200,
-            width: 1,
           ),
         ),
         child: Center(
@@ -388,7 +326,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
     final isMonth = unit == 'Bulan';
     final selected = isMonth ? _ageMonths : _ageYears;
     final options = List.generate(isMonth ? 12 : 30, (i) => i + 1);
-
     return DropdownButtonFormField<int>(
       value: selected,
       isExpanded: true,
@@ -428,19 +365,15 @@ class PetImageSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        children: [
-          AnimatedScale(
-            scale: isSelected ? 1.06 : 1.0,
-            duration: const Duration(milliseconds: 180),
-            child: Image.asset(
-              isSelected ? selectedImage : idleImage,
-              width: 150,
-              height: 150,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ],
+      child: AnimatedScale(
+        scale: isSelected ? 1.06 : 1.0,
+        duration: const Duration(milliseconds: 180),
+        child: Image.asset(
+          isSelected ? selectedImage : idleImage,
+          width: 150,
+          height: 150,
+          fit: BoxFit.contain,
+        ),
       ),
     );
   }
