@@ -145,9 +145,9 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                     builder: (BuildContext context) {
                       return Dialog(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius: BorderRadius.circular(50),
                         ),
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 190),
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 240),
                         child: ShortcutPage(),
                       );
                     },

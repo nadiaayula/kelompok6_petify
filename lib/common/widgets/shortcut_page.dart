@@ -39,23 +39,6 @@ class ShortcutPage extends StatelessWidget {
                 },
               ),
               
-              const SizedBox(height: 0),
-              
-              // Foster Button
-              _buildShortcutButton(
-                context,
-                imagePath: 'assets/images/scfoster.png',
-                onTap: () {
-                  // TODO: Navigate to Foster screen - Placeholder, actual screen not found.
-                  // For now, navigating to DashboardScreen. Please update when Foster screen is identified.
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const DashboardScreen()),
-                  );
-                },
-              ),
-              
-              const SizedBox(height: 0),
-              
               // Medical Check Button
               _buildShortcutButton(
                 context,
@@ -81,8 +64,8 @@ class ShortcutPage extends StatelessWidget {
                       },
                       child: Image.asset(
                         'assets/images/bottonhome.png', // Changed
-                                              height: 150,
-                                              width: 150,                        fit: BoxFit.contain,
+                                              height: 120,
+                                              width: 120,                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(width: 10), // Added spacing
@@ -91,8 +74,8 @@ class ShortcutPage extends StatelessWidget {
                                             Navigator.pop(context); // Close the current dialog and return to previous screen
                                           },                      child: Image.asset(
                         'assets/images/bottontutup.png', // Changed
-                                              height: 150,
-                                              width: 150,                        fit: BoxFit.contain,
+                                              height: 120,
+                                              width: 120,                        fit: BoxFit.contain,
                       ),
                     ),
                   ],
