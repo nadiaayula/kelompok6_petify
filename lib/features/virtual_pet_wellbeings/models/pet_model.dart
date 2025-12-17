@@ -1,47 +1,52 @@
 class Pet {
   final String id;
+  final String ownerId;
   final String name;
-  final String type;
-  final String age;
-  final String weight;
+  final String species; // Ini adalah 'type' di UI kamu (Kucing/Anjing)
+  final String? breed;
   final String gender;
-  final String breed;
-  final String imageUrl;
+  final DateTime? birthDate;
+  final double weightKg;
+  final String? imageUrl;
 
-  const Pet({
+  Pet({
     required this.id,
+    required this.ownerId,
     required this.name,
-    required this.type,
-    required this.age,
-    required this.weight,
+    required this.species,
+    this.breed,
     required this.gender,
-    required this.breed,
-    required this.imageUrl,
+    this.birthDate,
+    required this.weightKg,
+    this.imageUrl,
   });
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'type': type,
-      'age': age,
-      'weight': weight,
-      'gender': gender,
-      'breed': breed,
-      'imageUrl': imageUrl,
-    };
+  // Getter untuk menghitung umur secara otomatis dari birthDate
+  String get age {
+    if (birthDate == null) return "Unknown";
+    final now = DateTime.now();
+    final difference = now.difference(birthDate!);
+    final years = (difference.inDays / 365).floor();
+    final months = ((difference.inDays % 365) / 30).floor();
+    
+    if (years > 0) return "$years Thn $months Bln";
+    return "$months Bulan";
   }
 
-  factory Pet.fromMap(Map<String, dynamic> map) {
+  // Mapper dari JSON Supabase ke Object Flutter
+  factory Pet.fromJson(Map<String, dynamic> json) {
     return Pet(
-      id: map['id'],
-      name: map['name'],
-      type: map['type'],
-      age: map['age'],
-      weight: map['weight'],
-      gender: map['gender'],
-      breed: map['breed'],
-      imageUrl: map['imageUrl'],
+      id: json['id'],
+      ownerId: json['owner_id'],
+      name: json['name'],
+      species: json['species'],
+      breed: json['breed'],
+      gender: json['gender'],
+      birthDate: json['birth_date'] != null 
+          ? DateTime.parse(json['birth_date']) 
+          : null,
+      weightKg: (json['weight_kg'] ?? 0).toDouble(),
+      imageUrl: json['image_url'],
     );
   }
 }
