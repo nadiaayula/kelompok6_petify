@@ -126,7 +126,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (profileResponse != null) {
             // FIX: Try 'display_name' first, then 'full_name'
             userName = profileResponse['display_name'] ?? profileResponse['full_name'] ?? "User"; 
-            userProvince = profileResponse['province'] ?? "Tidak ada lokasi";
+            userProvince = profileResponse['province'] ?? "Belum ada lokasi"; 
             userAvatar = profileResponse['avatar_url'];
           } else {
             // Fallback if profile row is missing, check Auth Metadata
