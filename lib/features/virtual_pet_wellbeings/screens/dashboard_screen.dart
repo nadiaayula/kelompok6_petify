@@ -107,6 +107,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _petsFuture = _fetchPets();
   }
 
+  // =============================
+  // 4. USER PROFILE DATA
+  // =============================
+  String userName = "Loading...";
+  String userProvince = "Loading...";
+  String? userAvatar;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchProfileData();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // =============================
+  // 5. FETCH DATA DARI SUPABASE
+  // =============================
+  Future<void> fetchProfileData() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final data = await Supabase.instance.client
+        .from('owner_profile')
+        .select()
+        .eq('user_id', user.id)
+        .single();
+
+    setState(() {
+      userName = data['display_name'] ?? "User";
+      userProvince = data['province'] ?? "Tidak ada lokasi";
+      userAvatar = data['avatar_url'];
+    });
+  }
+
+  // =============================
+  // 6. UI STARTS HERE
+  // =============================
   @override
   void dispose() {
     _pageController.dispose();

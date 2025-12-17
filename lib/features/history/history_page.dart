@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum HistoryFilter {
   all,
@@ -29,100 +30,108 @@ class HistoryData {
     required this.date,
     required this.asset,
   });
+
+factory HistoryData.fromJson(Map<String, dynamic> json) {
+  return HistoryData(
+    type: json['activity_type'] ?? '',
+    animal: json['animal'] ?? '',
+    title: json['title'] ?? '',
+    subtitle: json['subtitle'] ?? '',
+    points: json['points'] ?? 0,
+    time: json['activity_time'] ?? '',
+    date: json['activity_date'] ?? '', 
+    asset: json['asset'] ?? 'assets/images/kucing1.png',
+  );
+}
 }
 
-final List<HistoryData> historyList = [
-  HistoryData(
-    type: "vaksinasi",
-    animal: "kucing",
-    title: "Vaksinasi",
-    subtitle: "Mendapatkan point sebesar",
-    points: 200,
-    time: "12.58",
-    date: "Kemarin",
-    asset: "assets/kucing1.png",
-  ),
-  HistoryData(
-    type: "cek_kesehatan",
-    animal: "kucing",
-    title: "Cek Kesehatan",
-    subtitle: "Mendapatkan point sebesar",
-    points: 35,
-    time: "08.46",
-    date: "Sabtu, 22 Maret 2024",
-    asset: "assets/medical_kit.png",
-  ),
-  HistoryData(
-    type: "vaksinasi",
-    animal: "anjing",
-    title: "Vaksinasi",
-    subtitle: "Mendapatkan point sebesar",
-    points: 200,
-    time: "10.18",
-    date: "Jumat, 21 Maret 2024",
-    asset: "assets/anjing1.png",
-  ),
-  HistoryData(
-    type: "cek_kesehatan",
-    animal: "anjing",
-    title: "Cek Kesehatan",
-    subtitle: "Mendapatkan point sebesar",
-    points: 35,
-    time: "09.23",
-    date: "Jumat, 21 Maret 2024",
-    asset: "assets/medical_kit.png",
-  ),
-  HistoryData(
-    type: "membersihkan",
-    animal: "anjing",
-    title: "Membersihkan Kandang",
-    subtitle: "Mendapatkan point sebesar",
-    points: 15,
-    time: "09.23",
-    date: "Jumat, 21 Maret 2024",
-    asset: "assets/sisir.png",
-  ),
-];
-
-class HistoryPage extends StatelessWidget {
+class HistoryPage extends StatefulWidget {
   final HistoryFilter filter;
-  HistoryPage({super.key, required this.filter});
+  const HistoryPage({super.key, required this.filter});
 
+  @override
+  State<HistoryPage> createState() => _HistoryPageState();
+}
+
+class _HistoryPageState extends State<HistoryPage> {
   final TextEditingController _searchController = TextEditingController();
+  final supabase = Supabase.instance.client;
+  
+  List<HistoryData> historyList = [];
+  int totalPoints = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => isLoading = true);
+    
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+      
+      // Load total points
+      final pointsResult = await supabase.rpc('get_user_total_points', params: {
+        'p_user_id': userId,
+      });
+      
+      // Load history with filter
+      String filterType = 'all';
+      switch (widget.filter) {
+        case HistoryFilter.poinTerbanyak:
+          filterType = 'poinTerbanyak';
+          break;
+        case HistoryFilter.vaksinasi:
+          filterType = 'vaksinasi';
+          break;
+        case HistoryFilter.cekKesehatan:
+          filterType = 'cekKesehatan';
+          break;
+        case HistoryFilter.anjing:
+          filterType = 'anjing';
+          break;
+        case HistoryFilter.kucing:
+          filterType = 'kucing';
+          break;
+        default:
+          filterType = 'all';
+      }
+      
+      final historyResult = await supabase.rpc('get_activity_history', params: {
+        'p_user_id': userId,
+        'p_filter_type': filterType,
+        'p_search_query': _searchController.text.isEmpty ? null : _searchController.text,
+      });
+      
+      setState(() {
+        totalPoints = pointsResult as int? ?? 0;
+        if (historyResult is List) {
+          historyList = historyResult.map((e) => HistoryData.fromJson(e as Map<String, dynamic>)).toList();
+        }
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading data: $e');
+      setState(() => isLoading = false);
+    }
+  }
 
   List<HistoryData> getFilteredData() {
-    List<HistoryData> result = historyList;
-
-    switch (filter) {
-      case HistoryFilter.poinTerbanyak:
-        result = [...result]..sort((a, b) => b.points.compareTo(a.points));
-        break;
-      case HistoryFilter.vaksinasi:
-        result = result.where((e) => e.type == "vaksinasi").toList();
-        break;
-      case HistoryFilter.cekKesehatan:
-        result = result.where((e) => e.type == "cek_kesehatan").toList();
-        break;
-      case HistoryFilter.anjing:
-        result = result.where((e) => e.animal == "anjing").toList();
-        break;
-      case HistoryFilter.kucing:
-        result = result.where((e) => e.animal == "kucing").toList();
-        break;
-      default:
-        break;
-    }
-
     final query = _searchController.text.trim().toLowerCase();
-    if (query.isNotEmpty) {
-      result = result.where((e) {
-        return e.title.toLowerCase().contains(query) ||
-            e.type.toLowerCase().contains(query) ||
-            e.animal.toLowerCase().contains(query);
-      }).toList();
-    }
-
-    return result;
+    if (query.isEmpty) return historyList;
+    
+    return historyList.where((e) {
+      return e.title.toLowerCase().contains(query) ||
+          e.type.toLowerCase().contains(query) ||
+          e.animal.toLowerCase().contains(query);
+    }).toList();
   }
 
   @override
@@ -132,35 +141,40 @@ class HistoryPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "Riwayat & Points",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              _headerTotalPoints(),
-              const SizedBox(height: 20),
-              _buildSearchBar(context),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: isLoading 
+          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
-                  children: _buildGroupedHistory(filtered),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        "Riwayat & Points",
+                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    _headerTotalPoints(),
+                    const SizedBox(height: 20),
+                    _buildSearchBar(context),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: filtered.isEmpty 
+                          ? [const Center(child: Text('Tidak ada riwayat'))]
+                          : _buildGroupedHistory(filtered),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
       ),
     );
   }
@@ -179,23 +193,20 @@ class HistoryPage extends StatelessWidget {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   "Total perolehan",
                   style: TextStyle(fontSize: 13, color: Colors.black54),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Row(
                   children: [
                     Text(
-                      "1.500",
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      totalPoints.toString(),
+                      style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(width: 6),
-                    Text("Points"),
+                    const SizedBox(width: 6),
+                    const Text("Points"),
                   ],
                 ),
               ],
@@ -205,18 +216,9 @@ class HistoryPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                  ),
-                ],
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
               ),
-              child: const Icon(
-                Icons.diamond,
-                color: Colors.blue,
-                size: 32,
-              ),
+              child: const Icon(Icons.diamond, color: Colors.blue, size: 32),
             ),
           ],
         ),
@@ -236,16 +238,11 @@ class HistoryPage extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 6,
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
               ),
               child: Row(
                 children: [
-                  Icon(Icons.search, color: Colors.orange),
+                  const Icon(Icons.search, color: Colors.orange),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -255,9 +252,7 @@ class HistoryPage extends StatelessWidget {
                         border: InputBorder.none,
                         isCollapsed: true,
                       ),
-                      onChanged: (value) {
-                        (context as Element).markNeedsBuild();
-                      },
+                      onChanged: (value) => setState(() {}),
                     ),
                   ),
                 ],
@@ -266,9 +261,7 @@ class HistoryPage extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           GestureDetector(
-            onTap: () {
-              _showFilterPopup(context);
-            },
+            onTap: () => _showFilterPopup(context),
             child: Container(
               height: 48,
               width: 48,
@@ -296,25 +289,14 @@ class HistoryPage extends StatelessWidget {
       widgets.add(
         Padding(
           padding: const EdgeInsets.only(top: 10, bottom: 6),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              date,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          child: Text(date, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
       );
-
       for (var item in items) {
         widgets.add(_historyItem(item));
         widgets.add(const SizedBox(height: 16));
       }
     });
-
     return widgets;
   }
 
@@ -324,28 +306,19 @@ class HistoryPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 6,
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
       ),
       child: Row(
         children: [
           Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: Image.asset(
-                data.asset,
-                fit: BoxFit.contain,
-              ),
+              child: data.asset.startsWith('http')
+                ? Image.network(data.asset, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Icon(Icons.pets))
+                : Image.asset(data.asset, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Icon(Icons.pets)),
             ),
           ),
           const SizedBox(width: 14),
@@ -353,38 +326,14 @@ class HistoryPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  data.title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text(data.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 3),
-                Text(
-                  data.subtitle,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  "${data.points} points",
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.orange,
-                  ),
-                ),
+                Text(data.subtitle, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                Text("${data.points} points", style: const TextStyle(fontSize: 13, color: Colors.orange)),
               ],
             ),
           ),
-          Text(
-            data.time,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
-            ),
-          ),
+          Text(data.time, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
         ],
       ),
     );
@@ -398,8 +347,7 @@ class HistoryPage extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
-        HistoryFilter? selected = filter;
-
+        HistoryFilter? selected = widget.filter;
         return StatefulBuilder(
           builder: (context, setState) {
             return Padding(
@@ -419,35 +367,19 @@ class HistoryPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    "Filter Pencarian",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Filter Pencarian", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 20),
-                  const Text(
-                    "Cari Berdasarkan",
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                  ),
+                  const Text("Cari Berdasarkan", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _filterChip("Poin Terbanyak", HistoryFilter.poinTerbanyak, selected, (v) {
-                        setState(() => selected = v);
-                      }),
-                      _filterChip("Vaksinasi", HistoryFilter.vaksinasi, selected, (v) {
-                        setState(() => selected = v);
-                      }),
-                      _filterChip("Cek Kesehatan", HistoryFilter.cekKesehatan, selected, (v) {
-                        setState(() => selected = v);
-                      }),
-                      _filterChip("Anjing", HistoryFilter.anjing, selected, (v) {
-                        setState(() => selected = v);
-                      }),
-                      _filterChip("Kucing", HistoryFilter.kucing, selected, (v) {
-                        setState(() => selected = v);
-                      }),
+                      _filterChip("Poin Terbanyak", HistoryFilter.poinTerbanyak, selected, (v) => setState(() => selected = v)),
+                      _filterChip("Vaksinasi", HistoryFilter.vaksinasi, selected, (v) => setState(() => selected = v)),
+                      _filterChip("Cek Kesehatan", HistoryFilter.cekKesehatan, selected, (v) => setState(() => selected = v)),
+                      _filterChip("Anjing", HistoryFilter.anjing, selected, (v) => setState(() => selected = v)),
+                      _filterChip("Kucing", HistoryFilter.kucing, selected, (v) => setState(() => selected = v)),
                     ],
                   ),
                   const SizedBox(height: 28),
@@ -461,13 +393,8 @@ class HistoryPage extends StatelessWidget {
                             border: Border.all(color: Colors.grey.shade400),
                           ),
                           child: TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text(
-                              "Tutup",
-                              style: TextStyle(color: Colors.black),
-                            ),
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Tutup", style: TextStyle(color: Colors.black)),
                           ),
                         ),
                       ),
@@ -484,18 +411,10 @@ class HistoryPage extends StatelessWidget {
                               Navigator.pop(context);
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (_) => HistoryPage(filter: selected ?? filter),
-                                ),
+                                MaterialPageRoute(builder: (_) => HistoryPage(filter: selected ?? widget.filter)),
                               );
                             },
-                            child: const Text(
-                              "Lanjutkan",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            child: const Text("Lanjutkan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ),
@@ -511,14 +430,8 @@ class HistoryPage extends StatelessWidget {
     );
   }
 
-  Widget _filterChip(
-    String label,
-    HistoryFilter value,
-    HistoryFilter? selected,
-    Function(HistoryFilter) onSelect,
-  ) {
+  Widget _filterChip(String label, HistoryFilter value, HistoryFilter? selected, Function(HistoryFilter) onSelect) {
     final bool isSelected = value == selected;
-
     return GestureDetector(
       onTap: () => onSelect(value),
       child: Container(

@@ -8,7 +8,7 @@ class JenisVaksinasiModal extends StatefulWidget {
 }
 
 class _JenisVaksinasiModalState extends State<JenisVaksinasiModal> {
-  String? _selectedVaksin;
+  Map<String, String>? _selectedVaksinInfo;
 
   // Data vaksin
   final List<Map<String, dynamic>> _vaksinData = [
@@ -114,7 +114,7 @@ class _JenisVaksinasiModalState extends State<JenisVaksinasiModal> {
                       category['vaccines'].length,
                       (vaccineIndex) {
                         final vaccine = category['vaccines'][vaccineIndex];
-                        final isSelected = _selectedVaksin == vaccine;
+                        final isSelected = _selectedVaksinInfo?['name'] == vaccine;
                         
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -124,10 +124,13 @@ class _JenisVaksinasiModalState extends State<JenisVaksinasiModal> {
                           ),
                           child: RadioListTile<String>(
                             value: vaccine,
-                            groupValue: _selectedVaksin,
+                            groupValue: _selectedVaksinInfo?['name'],
                             onChanged: (value) {
                               setState(() {
-                                _selectedVaksin = value;
+                                _selectedVaksinInfo = {
+                                  'name': value!,
+                                  'category': category['category']
+                                };
                               });
                             },
                             title: Text(
@@ -168,8 +171,8 @@ class _JenisVaksinasiModalState extends State<JenisVaksinasiModal> {
               height: 56,
               child: ElevatedButton(
                 onPressed: () {
-                  if (_selectedVaksin != null) {
-                    Navigator.pop(context, _selectedVaksin);
+                  if (_selectedVaksinInfo != null) {
+                    Navigator.pop(context, _selectedVaksinInfo);
                   }
                 },
                 style: ElevatedButton.styleFrom(

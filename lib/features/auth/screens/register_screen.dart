@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -41,14 +44,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final name = _nameController.text;
         final whatsapp = _whatsappController.text;
 
-        await Supabase.instance.client.auth.signUp(
-          email: email,
-          password: password,
-          data: {'full_name': name, 'whatsapp': whatsapp},
-        );
+        // Sign up user
+        print('🔍 Starting signup for: $email');
+
+        try {
+          final response = await Supabase.instance.client.auth.signUp(
+            email: email,
+            password: password,
+          );
+
+          print('🔍 Signup response: ${response.user?.id}');
+          print('🔍 Session: ${response.session?.accessToken != null ? "Valid" : "Null"}');
+
+          // Insert ke tabel owner_profile
+          if (response.user != null) {
+            try {
+              print('🔍 DEBUG: Trying to insert profile...');
+              print('🔍 User ID: ${response.user!.id}');
+              print('🔍 Display Name: $name');
+              print('🔍 Phone: $whatsapp');
+
+              await Supabase.instance.client.from('owner_profile').insert({
+                'user_id': response.user!.id,
+                'display_name': name,
+                'phone': whatsapp,
+              });
+              print('✅ Profile saved successfully');
+            } catch (e) {
+              print('❌ Error saving profile: $e');
+              print('❌ Error type: ${e.runtimeType}');
+              // Show detailed error to user
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Warning: Profile not saved. Error: $e'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 5),
+                  ),
+                );
+              }
+            }
+          } else {
+            print('⚠️ No user returned from signup');
+          }
+        } catch (signupError) {
+          print('❌❌ SIGNUP FAILED: $signupError');
+          print('❌❌ Error type: ${signupError.runtimeType}');
+          rethrow; // Throw lagi biar ketangkap di catch utama
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registration successful! Check your email for confirmation.')),
+            const SnackBar(
+              content: Text('Registration successful! Check your email for confirmation.'),
+              backgroundColor: Colors.green,
+            ),
           );
           Navigator.pop(context);
         }
@@ -76,6 +126,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _isLoading = false;
           });
         }
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const DashboardScreen(),
+          ),
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In error: ${error.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unexpected error: $error'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -258,6 +356,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 30),
 
+                  // Atau Lanjutkan Dengan
+                  const Text(
+                    'atau lanjutkan dengan',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 25),
+
+                  // Social Login Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSocialButton(
+                        icon: Icons.g_mobiledata,
+                        color: const Color(0xFFDB4437),
+                        onTap: _handleGoogleSignIn,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+
                   // Link ke Login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -286,6 +408,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Icon(icon, color: color, size: 30),
         ),
       ),
     );

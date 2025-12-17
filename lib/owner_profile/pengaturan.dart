@@ -1,21 +1,5 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const BahasaApp());
-}
-
-class BahasaApp extends StatelessWidget {
-  const BahasaApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: BahasaPage(),
-    );
-  }
-}
-
 class BahasaPage extends StatefulWidget {
   const BahasaPage({super.key});
 
@@ -96,7 +80,6 @@ class _BahasaPageState extends State<BahasaPage> {
             children: [
               const SizedBox(height: 20),
 
-              // HEADER
               Row(
                 children: [
                   Container(
@@ -107,9 +90,14 @@ class _BahasaPageState extends State<BahasaPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                          color: Colors.black54, size: 20),
-                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.black54,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
                     ),
                   ),
                   const Spacer(),
@@ -127,12 +115,10 @@ class _BahasaPageState extends State<BahasaPage> {
 
               const SizedBox(height: 30),
 
-              // LIST BAHASA
               ...languages.map((e) => languageItem(e["name"], e["flag"])),
 
               const SizedBox(height: 20),
 
-              // SAVE BUTTON
               Container(
                 height: 64,
                 width: double.infinity,

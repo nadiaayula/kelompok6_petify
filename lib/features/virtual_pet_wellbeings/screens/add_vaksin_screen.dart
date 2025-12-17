@@ -1,17 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../common/widgets/calendar_modal.dart';
+import '../../../common/widgets/shortcut_page.dart';
+import '../../../common/widgets/success_dialog.dart';
+import '../../../common/widgets/failure_dialog.dart';
 import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
-  const AddVaksinScreen({Key? key}) : super(key: key);
+  const AddVaksinScreen({super.key});
 
   @override
   State<AddVaksinScreen> createState() => _AddVaksinScreenState();
 }
 
 class _AddVaksinScreenState extends State<AddVaksinScreen> {
-  String _selectedCountryCode = '🇮🇩';
   DateTime? _selectedDate;
   String? _selectedVaksin;
+  String? _selectedVaksinImage;
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _pets = [];
+  String? _selectedPetId;
+  List<Map<String, dynamic>> _clinics = [];
+  Map<String, dynamic>? _selectedClinic;
+  String _selectedCountryCode = '🇮🇩';
+
+  final _medicalNotesController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPets();
+    _fetchClinics();
+  }
+
+  Future<void> _fetchClinics() async {
+    try {
+      final response = await Supabase.instance.client.from('clinic').select();
+      setState(() {
+        _clinics = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching clinics: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data klinik: $e')),
+      );
+    }
+  }
+
+  Future<void> _fetchPets() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+      print('Fetching pets for user ID: $userId'); // Debug print
+      if (userId == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat memuat peliharaan: Pengguna tidak login.')),
+        );
+        return;
+      }
+      final response = await Supabase.instance.client
+          .from('pets')
+          .select('id, name')
+          .eq('owner_id', userId);
+
+      print('Supabase response: $response'); // Debug print
+
+      setState(() {
+        _pets = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching pets: $e'); // Debug print
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat peliharaan: $e')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _medicalNotesController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +122,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   ),
                 ),
               ),
-              
+
               // TITLE
               const Flexible(
                 child: Text(
@@ -65,25 +136,41 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                   ),
                 ),
               ),
-              
+
               // MENU BUTTON
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.menu,
-                  size: 18,
-                  color: Colors.grey,
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Dialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 240),
+                        child: ShortcutPage(),
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.menu,
+                    size: 18,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
             ],
@@ -93,61 +180,31 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // Data Peliharaan Section
-          const Text(
-            'Data Peliharaan',
-            style: TextStyle(
-              fontFamily: 'PlusJakartaSans',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+          DropdownButtonFormField<String>(
+            value: _selectedPetId,
+            hint: const Text('Pilih peliharaan'),
+            onChanged: (String? newValue) {
+              setState(() {
+                _selectedPetId = newValue;
+              });
+            },
+            items: _pets.map<DropdownMenuItem<String>>((Map<String, dynamic> pet) {
+              return DropdownMenuItem<String>(
+                value: pet['id'],
+                child: Text(pet['name']),
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
-          const SizedBox(height: 15),
-          
-          _buildTextField(hint: 'Nama peliharaan'),
-          const SizedBox(height: 12),
-          
-          _buildTextField(hint: 'Kondisi kesehatan'),
-          const SizedBox(height: 12),
-          
-          _buildTextField(
-            hint: 'Deskripsi riwayat kesehatan',
-            maxLines: 3,
-          ),
-          const SizedBox(height: 12),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(hint: 'Berat peliharaan'),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFE5E5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Kg',
-                  style: TextStyle(
-                    fontFamily: 'PlusJakartaSans',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFFF6B6B),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          _buildTextField(
-            hint: 'Informasi tambahan',
-            maxLines: 3,
-          ),
           const SizedBox(height: 25),
-          
+
           // Data Klinik Section
           const Text(
             'Data Klinik',
@@ -158,31 +215,62 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             ),
           ),
           const SizedBox(height: 15),
-          
-          _buildTextField(
-            hint: 'Nama klinik',
-            suffixIcon: const Icon(
-              Icons.location_on,
-              color: Color(0xFFFF6B6B),
+
+          DropdownButtonFormField<Map<String, dynamic>>(
+            value: _selectedClinic,
+            hint: const Text('Pilih Klinik'),
+            onChanged: (Map<String, dynamic>? newValue) {
+              setState(() {
+                _selectedClinic = newValue;
+              });
+            },
+            items: _clinics.map<DropdownMenuItem<Map<String, dynamic>>>((Map<String, dynamic> clinic) {
+              return DropdownMenuItem<Map<String, dynamic>>(
+                value: clinic,
+                child: Text(clinic['name']),
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          
-          _buildTextField(hint: 'Nama dokter atau perawat'),
-          const SizedBox(height: 12),
-          
-          _buildPhoneField(),
-          const SizedBox(height: 12),
-          
+
+          if (_selectedClinic != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Dokter: ${_selectedClinic!['doctor_name'] ?? '-'}'),
+                  const SizedBox(height: 4),
+                  Text('Telepon: ${_selectedClinic!['phone'] ?? '-'}'),
+                ],
+              ),
+            )
+          ],
+
+          const SizedBox(height: 25),
+
+
           Row(
             children: [
               Expanded(
                 child: _buildActionButton(
                   icon: Icons.calendar_today,
-                  label: _selectedDate == null 
-                    ? 'Tanggal' 
+                  label: _selectedDate == null
+                    ? 'Tanggal'
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                  onTap: () => _selectDate(context),
+                  onTap: () => _showCalendarModal(),
                 ),
               ),
               const SizedBox(width: 12),
@@ -196,19 +284,28 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          
+          if (_selectedVaksinImage != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Image.asset(
+                _selectedVaksinImage!,
+                height: 100, // You can adjust the height as needed
+              ),
+            ),
+
           _buildTextField(
             hint: 'Catatan medis',
             maxLines: 3,
+            controller: _medicalNotesController,
           ),
           const SizedBox(height: 30),
-          
+
           // Submit Button
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: _isLoading ? null : _saveVaccinationRecord,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B6B),
                 shape: RoundedRectangleBorder(
@@ -216,15 +313,17 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                 ),
                 elevation: 0,
               ),
-              child: const Text(
-                'Simpan',
-                style: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                  : const Text(
+                      'Simpan',
+                      style: TextStyle(
+                        fontFamily: 'PlusJakartaSans',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 20),
@@ -233,10 +332,84 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
+  Future<void> _saveVaccinationRecord() async {
+    if (_selectedPetId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih peliharaan.')),
+      );
+      return;
+    }
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih tanggal vaksinasi.')),
+      );
+      return;
+    }
+    if (_selectedVaksin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih jenis vaksin.')),
+      );
+      return;
+    }
+    if (_selectedClinic == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan pilih klinik.')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final vaccinationRecord = {
+        'pet_id': _selectedPetId,
+        'vaccination_date': _selectedDate!.toIso8601String(),
+        'vaccine_name': _selectedVaksin,
+        'medical_notes': _medicalNotesController.text,
+        'clinic_id': _selectedClinic!['id'],
+      };
+
+      await Supabase.instance.client.from('vaccination_records').insert(vaccinationRecord);
+
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => SuccessDialog(
+          title: 'Berhasil',
+          content: 'Vaksin berhasil ditambahkan',
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+        ),
+      );
+
+
+    } catch (e) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => const FailureDialog(
+          title: 'Gagal',
+          content: 'Vaksin gagal ditambahkan',
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   Widget _buildTextField({
     required String hint,
     int maxLines = 1,
     Widget? suffixIcon,
+    TextEditingController? controller,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -244,12 +417,13 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: TextField(
+        controller: controller,
         maxLines: maxLines,
         style: const TextStyle(
           fontFamily: 'PlusJakartaSans',
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          color: Color(0xFFB7B7B7),
+          color: Colors.black,
         ),
         decoration: InputDecoration(
           hintText: hint,
@@ -273,59 +447,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
-  Widget _buildPhoneField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  _selectedCountryCode,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 12,
-                  color: Color(0xFFB7B7B7),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TextField(
-              style: const TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFFB7B7B7),
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Nomor klinik',
-                hintStyle: TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFB7B7B7),
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 0,
-                  vertical: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildActionButton({
     required IconData icon,
@@ -364,28 +486,22 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     );
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+  void _showCalendarModal() {
+    showDialog(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFFF6B6B),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const CalendarModal(),
+      ),
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          _selectedDate = date;
+        });
+      }
+    });
   }
 
   void _showVaksinModal() {
@@ -393,10 +509,17 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) => const JenisVaksinasiModal(),
-    ).then((vaksin) {
-      if (vaksin != null) {
+    ).then((result) {
+      if (result != null && result is Map<String, String>) {
         setState(() {
-          _selectedVaksin = vaksin;
+          _selectedVaksin = result['name'];
+          if (result['category'] == 'Vaksin Anjing') {
+            _selectedVaksinImage = 'assets/images/iconanjingmed.png';
+          } else if (result['category'] == 'Vaksin Kucing') {
+            _selectedVaksinImage = 'assets/images/iconkucingmed.png';
+          } else {
+            _selectedVaksinImage = null; // Clear if category is not dog or cat
+          }
         });
       }
     });
