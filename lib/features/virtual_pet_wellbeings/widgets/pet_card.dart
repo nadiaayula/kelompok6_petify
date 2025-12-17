@@ -88,7 +88,7 @@ class _PetCardState extends State<PetCard> {
                   crossAxisAlignment: CrossAxisAlignment.start, // Rata Kiri
                   children: [
                     Text(
-                      widget.pet.type,
+                      widget.pet.species,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -117,9 +117,9 @@ class _PetCardState extends State<PetCard> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _infoText(Icons.cake_outlined, 'Umur', widget.pet.age),
-                    _infoText(Icons.monitor_weight_outlined, 'Berat', widget.pet.weight),
+                    _infoText(Icons.monitor_weight_outlined, 'Berat', '${widget.pet.weightKg} kg'),
                     _infoText(Icons.transgender, 'Kelamin', widget.pet.gender),
-                    _infoText(Icons.pets_outlined, 'Ras', widget.pet.breed),
+                    _infoText(Icons.pets_outlined, 'Ras', widget.pet.breed ?? 'Unknown'),
                   ],
                 ),
               ),
