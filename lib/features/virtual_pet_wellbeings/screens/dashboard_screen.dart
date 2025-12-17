@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:kelompok6_adoptify/owner_profile/profile.dart'; 
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 // FIX: Removed 'screens/' from the path based on your directory
-import 'package:kelompok6_adoptify/features/history/history_page.dart'; 
+import 'package:kelompok6_adoptify/features/history/history_page.dart';
 
 // =============================
 // 1. PET MODEL (MATCHING SUPABASE SCHEMA)
