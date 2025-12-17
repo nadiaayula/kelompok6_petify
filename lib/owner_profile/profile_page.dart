@@ -39,6 +39,105 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+    /* ================= HAPUS AKUN ================= */
+
+  Future<void> _confirmDeleteAccount() async {
+  showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: const Color(0xFFF3EDF7),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Log Out',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Kamu akan logout akun, yakin?',
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Batal',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 0, 0, 0),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _deleteAccount();
+                    },
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+  Future<void> _deleteAccount() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+
+      // hapus data profile
+      await Supabase.instance.client
+          .from('owner_profile')
+          .delete()
+          .eq('user_id', user.id);
+
+      // hapus akun auth
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/login', (route) => false);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus akun')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +198,15 @@ class _ProfilePageState extends State<ProfilePage> {
           _Section(title: 'Tentang'),
           const _Tile(icon: Icons.info_outline, title: 'Tentang kami'),
           const _Tile(icon: Icons.privacy_tip_outlined, title: 'Kebijakan aplikasi'),
+          const SizedBox(height: 16),
 
+          /* ===== MENU HAPUS AKUN ===== */
+          _Section(title: 'Akun'),
+          _Tile(
+            icon: Icons.delete_outline,
+            title: 'Hapus Akun',
+            onTap: _confirmDeleteAccount,
+          ),
           const SizedBox(height: 40),
         ],
       ),
