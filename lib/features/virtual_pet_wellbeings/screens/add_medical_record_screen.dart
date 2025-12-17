@@ -154,10 +154,10 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
                     builder: (BuildContext context) {
                       return Dialog(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(32),
+                          borderRadius: BorderRadius.circular(50),
                         ),
                         insetPadding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 190),
+                            horizontal: 20, vertical: 240),
                         child: const ShortcutPage(),
                       );
                     },
