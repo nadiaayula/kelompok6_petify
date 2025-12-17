@@ -90,10 +90,10 @@ class _LoginScreenState extends State<LoginScreen> {
         redirectTo: kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      
+
       // Wait for auth state change
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // Check if user is signed in
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null && mounted) {

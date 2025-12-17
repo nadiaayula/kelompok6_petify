@@ -46,13 +46,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         // Sign up user
         print('🔍 Starting signup for: $email');
-        
+
         try {
           final response = await Supabase.instance.client.auth.signUp(
             email: email,
             password: password,
           );
-          
+
           print('🔍 Signup response: ${response.user?.id}');
           print('🔍 Session: ${response.session?.accessToken != null ? "Valid" : "Null"}');
 
@@ -63,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               print('🔍 User ID: ${response.user!.id}');
               print('🔍 Display Name: $name');
               print('🔍 Phone: $whatsapp');
-              
+
               await Supabase.instance.client.from('owner_profile').insert({
                 'user_id': response.user!.id,
                 'display_name': name,
@@ -140,9 +140,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         redirectTo: kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
-      
+
       await Future.delayed(const Duration(seconds: 2));
-      
+
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null && mounted) {
         Navigator.of(context).pushReplacement(
