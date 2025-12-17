@@ -18,16 +18,19 @@ class PetCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        splashColor: Colors.orange.withOpacity(0.1), 
+        highlightColor: Colors.transparent, 
         borderRadius: BorderRadius.circular(24),
         child: Container(
+          margin: const EdgeInsets.all(4), 
           decoration: BoxDecoration(
             color: const Color(0xFFFFF8F0),
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+                color: Colors.black.withOpacity(0.03), 
+                blurRadius: 15,
+                offset: const Offset(0, 8),
               ),
             ],
           ),

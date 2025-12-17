@@ -93,9 +93,22 @@ class _AddPetScreenState extends State<AddPetScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0), // Beri sedikit ruang agar tidak terlalu mepet
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[100], // Warna background abu-abu muda
+              borderRadius: BorderRadius.circular(12), // Kelengkungan sudut kotak
+            ),
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new, // Gunakan icon yang sama dengan home
+                color: Colors.grey, // Warna icon abu-abu
+                size: 20,
+              ),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
         title: const Text(
           'Virtual Wellbeings',
