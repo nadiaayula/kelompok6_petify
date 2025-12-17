@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Wajib ada
 
 import '../models/pet_model.dart';
 import '../widgets/pet_card.dart';
@@ -15,49 +16,42 @@ class VpmHomeScreen extends StatefulWidget {
 class _VpmHomeScreenState extends State<VpmHomeScreen> {
   int _currentPage = 0;
   final PageController _pageController = PageController(viewportFraction: 0.85);
+  
+  // Variabel untuk menampung data dari Supabase
+  List<Pet> pets = [];
+  bool _isLoading = true;
 
-  static const List<Pet> pets = [
-    Pet(
-      id: '1',
-      name: "Vinc",
-      type: "Kucing",
-      age: "6 Bulan",
-      weight: "2.5 Kg",
-      gender: "Betina",
-      breed: "Angora",
-      imageUrl: "assets/images/kucing1.png",
-    ),
-    Pet(
-      id: '2',
-      name: "Bolu",
-      type: "Kucing",
-      age: "1 Tahun",
-      weight: "3.2 Kg",
-      gender: "Jantan",
-      breed: "Persian",
-      imageUrl: "assets/cat2.png",
-    ),
-    Pet(
-      id: '3',
-      name: "Beta",
-      type: "Kucing",
-      age: "8 Bulan",
-      weight: "2.8 Kg",
-      gender: "Betina",
-      breed: "Siamese",
-      imageUrl: "assets/cat3.png",
-    ),
-    Pet(
-      id: '4',
-      name: "Kosmin",
-      type: "Kucing",
-      age: "2 Tahun",
-      weight: "4.1 Kg",
-      gender: "Jantan",
-      breed: "Maine Coon",
-      imageUrl: "assets/cat4.png",
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchPets(); // Ambil data saat pertama kali buka
+  }
+
+  // FUNGSI AMBIL DATA DARI SUPABASE
+  Future<void> _fetchPets() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await Supabase.instance.client
+          .from('pets')
+          .select()
+          .order('created_at', ascending: false); // Urutkan dari yang terbaru
+
+      final data = response as List<dynamic>;
+      
+      setState(() {
+        pets = data.map((json) => Pet.fromJson(json)).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error fetching pets: $e');
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil data: $e')),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -65,11 +59,17 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
     super.dispose();
   }
 
-  void _goToAddPet() {
-    Navigator.push(
+  // FUNGSI NAVIGASI + REFRESH OTOMATIS
+  void _goToAddPet() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const AddPetScreen()),
     );
+
+    // Jika result adalah true (berhasil simpan), maka refresh data
+    if (result == true) {
+      _fetchPets();
+    }
   }
 
   @override
@@ -77,7 +77,7 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        bottom: false, // Memberikan ruang extra di bagian bawah
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -99,7 +99,7 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
 
             const SizedBox(height: 12),
 
-            // Title - Ukuran diperkecil sedikit agar hemat tempat
+            // Title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
@@ -146,57 +146,70 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
 
             const SizedBox(height: 20),
 
-            // Bagian PageView (Kartu)
+            // Konten Utama: Loading atau PageView
             Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (index) => setState(() => _currentPage = index),
-                itemCount: pets.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: PetCard(
-                      pet: pets[index],
-                      onTap: () {}, 
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+                : pets.isEmpty 
+                  ? Center(
+                      child: Text(
+                        "Belum ada data peliharaan.\nKlik tombol + untuk menambah.",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.plusJakartaSans(color: Colors.grey),
+                      ),
+                    )
+                  : PageView.builder(
+                      controller: _pageController,
+                      onPageChanged: (index) => setState(() => _currentPage = index),
+                      itemCount: pets.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: PetCard(
+                            pet: pets[index],
+                            onTap: () {}, 
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
 
-            // Navigator Bar (Indikator Dots + Tombol Panah)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-              child: Row(
-                children: [
-                  const SizedBox(width: 44), // Penyeimbang agar dots tetap di tengah
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        pets.length,
-                        (index) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: index == _currentPage ? 28 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: index == _currentPage ? Colors.orange : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(4),
+            // Navigator Bar
+            if (!_isLoading && pets.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 44),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          pets.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: index == _currentPage ? 28 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: index == _currentPage ? Colors.orange : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  _smallArrowButton(),
-                ],
+                    _smallArrowButton(),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
     );
   }
+
+  // --- WIDGET HELPERS ---
 
   Widget _smallArrowButton() {
     return GestureDetector(
@@ -256,39 +269,6 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
       child: IconButton(
         icon: Icon(icon, color: Colors.grey[400], size: 18),
         onPressed: onTap,
-      ),
-    );
-  }
-}
-
-class _ArrowCircleButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _ArrowCircleButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(32),
-        child: Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.12),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Icon(Icons.arrow_forward_ios, color: Colors.grey[500], size: 20),
-        ),
       ),
     );
   }
