@@ -2,82 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// FIX: Corrected the import from 'profile.dart' to 'profile_page.dart'
-import 'package:kelompok6_adoptify/owner_profile/profile.dart'; 
+import 'package:kelompok6_adoptify/owner_profile/profile_page.dart'; 
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
-// FIX: Removed 'screens/' from the path based on your directory
 import 'package:kelompok6_adoptify/features/history/history_page.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_pet_screen.dart'; 
 
 // =============================
-// 1. PET MODEL (MATCHING SUPABASE SCHEMA)
+// 1. PET MODEL
 // =============================
 class Pet {
   final String id;
   final String name;
-  final String type;   // Mapped from 'species'
-  final String breed;  // From 'breed'
-  final String gender; // From 'gender'
-  final String age;    // Calculated from 'birth_date'
-  final String weight; // From 'weight_kg'
+  final String type;
+  final String age;
   final String imageUrl;
 
   Pet({
     required this.id,
     required this.name,
     required this.type,
-    required this.breed,
-    required this.gender,
     required this.age,
-    required this.weight,
     required this.imageUrl,
   });
 
   factory Pet.fromJson(Map<String, dynamic> json) {
-    // 1. Map Species
     String mapSpecies(String? species) {
-      if (species == 'cat') return 'Kucing';
-      if (species == 'dog') return 'Anjing';
+      if (species == 'cat' || species == 'Kucing') return 'Kucing';
+      if (species == 'dog' || species == 'Anjing') return 'Anjing';
       return species ?? 'Unknown';
     }
 
-    // 2. Map Gender
-    String mapGender(String? gender) {
-      if (gender == 'male') return 'Jantan';
-      if (gender == 'female') return 'Betina';
-      return gender ?? '-';
-    }
-
-    // 3. Calculate Age from birth_date
-    String calculateAge(String? birthDateString) {
-      if (birthDateString == null) return "Umur -";
+    // Calculate age logic (Simplified for display)
+    String displayAge = "6 Bulan"; // Default fallback
+    if (json['birth_date'] != null) {
       try {
-        final birthDate = DateTime.parse(birthDateString);
-        final now = DateTime.now();
-        final difference = now.difference(birthDate);
-        final days = difference.inDays;
-
-        if (days < 30) {
-          return "$days Hari";
-        } else if (days < 365) {
-          final months = (days / 30).floor();
-          return "$months Bulan";
+        final birthDate = DateTime.parse(json['birth_date']);
+        final days = DateTime.now().difference(birthDate).inDays;
+        if (days > 365) {
+          displayAge = "${(days / 365).floor()} Tahun";
+        } else if (days > 30) {
+          displayAge = "${(days / 30).floor()} Bulan";
         } else {
-          final years = (days / 365).floor();
-          return "$years Tahun";
+          displayAge = "$days Hari";
         }
-      } catch (e) {
-        return "Umur -";
-      }
+      } catch (_) {}
     }
 
     return Pet(
       id: json['id']?.toString() ?? '',
       name: json['name'] ?? 'Tanpa Nama',
       type: mapSpecies(json['species']),
-      breed: json['breed'] ?? '-',
-      gender: mapGender(json['gender']),
-      age: calculateAge(json['birth_date']), 
-      weight: json['weight_kg'] != null ? "${json['weight_kg']} Kg" : "-",
+      age: displayAge, 
       imageUrl: json['image_url'] ?? '',
     );
   }
@@ -94,8 +69,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final PageController _pageController = PageController(viewportFraction: 0.9);
   late Future<List<Pet>> _petsFuture;
 
-  // State Variables for User Profile
-  String userName = "Loading...";
+  // State Variables
+  String userName = "Loading..."; // Default text while fetching
   String userProvince = "Loading...";
   String? userAvatar;
   int userPoints = 0; 
@@ -107,19 +82,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _petsFuture = _fetchPets();
   }
 
-  // =============================
-  // 4. USER PROFILE DATA
-  // =============================
-  String userName = "Loading...";
-  String userProvince = "Loading...";
-  String? userAvatar;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchProfileData();
-  }
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -127,51 +89,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // =============================
-  // 5. FETCH DATA DARI SUPABASE
-  // =============================
-  Future<void> fetchProfileData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
-
-    final data = await Supabase.instance.client
-        .from('owner_profile')
-        .select()
-        .eq('user_id', user.id)
-        .single();
-
-    setState(() {
-      userName = data['display_name'] ?? "User";
-      userProvince = data['province'] ?? "Tidak ada lokasi";
-      userAvatar = data['avatar_url'];
-    });
-  }
-
-  // =============================
-  // 6. UI STARTS HERE
-  // =============================
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  // =============================
-  // 3. FETCH DATA LOGIC
+  // 3. FETCH DATA
   // =============================
   
   Future<void> fetchUserData() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return;
+      if (user == null) {
+        if (mounted) {
+          setState(() {
+            userName = "Guest";
+            userProvince = "-";
+          });
+        }
+        return;
+      }
 
-      // 1. Fetch Profile (Matches table 'owner_profiles')
+      // 1. Fetch Profile
+      // FIX: Changed to 'owner_profile' (singular) and 'user_id' based on your feedback
       final profileResponse = await Supabase.instance.client
-          .from('owner_profiles') 
+          .from('owner_profile') 
           .select()
-          .eq('id', user.id) 
+          .eq('user_id', user.id) // Assuming 'user_id' is the foreign key column
           .maybeSingle(); 
 
-      // 2. Fetch Points (Matches table 'user_points')
+      // 2. Fetch Points
       final pointsResponse = await Supabase.instance.client
           .from('user_points')
           .select('total_points')
@@ -180,11 +122,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (mounted) {
         setState(() {
+          // Update Profile Data
           if (profileResponse != null) {
-            userName = profileResponse['full_name'] ?? "User";
-            // Assuming 'province' column exists, otherwise use 'city_address'
-            userProvince = profileResponse['province'] ?? profileResponse['city_address'] ?? "Indonesia";
+            // FIX: Try 'display_name' first, then 'full_name'
+            userName = profileResponse['display_name'] ?? profileResponse['full_name'] ?? "User"; 
+            userProvince = profileResponse['province'] ?? "Tidak ada lokasi";
             userAvatar = profileResponse['avatar_url'];
+          } else {
+            // Fallback if profile row is missing, check Auth Metadata
+            userName = user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? "User";
           }
           
           if (pointsResponse != null) {
@@ -194,16 +140,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching user data: $e");
+      if (mounted) {
+        setState(() {
+          userName = "User"; // Safe fallback
+        });
+      }
     }
   }
 
   Future<List<Pet>> _fetchPets() async {
     try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return [];
+
       final supabase = Supabase.instance.client;
-      // Fetch all columns needed for the updated Model
+      // STRICT FILTER: Only show pets belonging to this user
       final response = await supabase
           .from('pets')
-          .select('id, name, species, breed, gender, birth_date, weight_kg, image_url');
+          .select()
+          .eq('owner_id', user.id); 
       
       final data = response as List<dynamic>;
       return data.map((json) => Pet.fromJson(json)).toList();
@@ -245,9 +200,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Halo, $userName!", style: GoogleFonts.plusJakartaSans(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xff202020))),
+                          // Displays "Loading..." initially, then the fetched name
+                          Text(
+                            "Halo, $userName!", 
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xff202020)
+                            )
+                          ),
                           const SizedBox(height: 4),
-                          Row(children: [const Icon(Icons.location_on_outlined, size: 15, color: Color(0xff828282)), const SizedBox(width: 4), Text(userProvince, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xff828282)))]),
+                          Row(children: [
+                            const Icon(Icons.location_on_outlined, size: 15, color: Color(0xff828282)), 
+                            const SizedBox(width: 4), 
+                            Text(userProvince, style: GoogleFonts.plusJakartaSans(fontSize: 13, color: const Color(0xff828282)))
+                          ]),
                         ],
                       ),
                     ],
@@ -265,7 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // --- VIRTUAL PET TITLE (Left Aligned) ---
+              // --- VIRTUAL PET SECTION TITLE ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: SizedBox(
@@ -290,68 +255,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 16),
 
-              // --- PET CAROUSEL / EMPTY STATE ---
+              // --- PET CONTENT (Conditional Rendering) ---
               FutureBuilder<List<Pet>>(
                 future: _petsFuture,
                 builder: (context, snapshot) {
+                  // 1. Loading
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      height: 200,
+                    return const Padding(
+                      padding: EdgeInsets.all(32.0),
                       child: Center(child: CircularProgressIndicator(color: Colors.orange)),
                     );
                   }
                   
-                  if (snapshot.hasError) {
-                    return SizedBox(
-                      height: 200,
-                      child: Center(child: Text("Gagal memuat data.")),
+                  // 2. Error or Empty Data (New User State)
+                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                    // Show "Tambahkan Peliharaan" Widget
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: _buildEmptyPetState(context), // Pass context
                     );
                   }
 
-                  // Empty State (New User)
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return _buildEmptyPetState();
-                  }
-
+                  // 3. Data Exists (Existing User) -> Show Carousel
                   final pets = snapshot.data!;
-                  return SizedBox(
-                    height: 340,
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: pets.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 12.0),
-                          child: PetWellbeingCard(pet: pets[index]),
-                        );
-                      },
-                    ),
+                  return Column(
+                    children: [
+                      // Pet Carousel
+                      SizedBox(
+                        height: 340,
+                        child: PageView.builder(
+                          controller: _pageController,
+                          itemCount: pets.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 12.0),
+                              child: PetWellbeingCard(pet: pets[index]),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Medical Record Banner (Only visible if user has pets)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: _buildMedicalRecordBanner(context), 
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Checkpoints (Only visible if user has pets)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Checkpoints", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 16),
+                            _buildCheckpointItem("Makan", "Terakhir hari ini 10.15 AM", Icons.food_bank_outlined, const Color(0xFFF9E7D8), Colors.orange),
+                            _buildCheckpointItem("Mandi", "Terakhir Kemarin 16 April 2024", Icons.shower_outlined, const Color(0xFFFAE0E4), Colors.pink),
+                            _buildCheckpointItem("Vaksinasi", "Terakhir Rabu 12 April 2024", Icons.medical_services_outlined, const Color(0xFFF9E7D8), Colors.orange),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
 
               const SizedBox(height: 24),
 
-              // --- MEDICAL RECORD BANNER ---
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: _buildMedicalRecordBanner(context), 
-              ),
-
-              const SizedBox(height: 24),
-
-              // --- CHECKPOINTS ---
+              // --- REWARDS SECTION (Always Visible) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Checkpoints", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    _buildCheckpointItem("Makan", "Terakhir hari ini 10.15 AM", Icons.food_bank_outlined, const Color(0xFFF9E7D8), Colors.orange),
-                    _buildCheckpointItem("Mandi", "Terakhir Kemarin 16 April 2024", Icons.shower_outlined, const Color(0xFFFAE0E4), Colors.pink),
-                    _buildCheckpointItem("Vaksinasi", "Terakhir Rabu 12 April 2024", Icons.medical_services_outlined, const Color(0xFFF9E7D8), Colors.orange),
-                    const SizedBox(height: 24),
                     Text("Rewards Point", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
                     Text("Tukar poin dengan reward yang kamu mau!", style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)),
                     const SizedBox(height: 16),
@@ -371,11 +351,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // HELPER WIDGETS
   // =============================
 
-  Widget _buildEmptyPetState() {
+  // EMPTY STATE WIDGET (For New Users)
+  Widget _buildEmptyPetState(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(20),
@@ -389,34 +369,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.orange.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.pets, size: 40, color: Colors.orange),
+            child: const Icon(Icons.pets, size: 48, color: Colors.orange),
           ),
           const SizedBox(height: 16),
           Text(
             "Belum ada hewan peliharaan",
-            style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            "Tambahkan hewan peliharaanmu untuk mulai memantau kesehatannya!",
+            "Tambahkan hewan kesayanganmu untuk mulai memantau kesehatannya!",
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey[600]),
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to Add Pet Screen logic here
-              debugPrint("Tambah Hewan ditekan");
+            onPressed: () async {
+              // Navigate to AddPetScreen and wait for result (true = refresh)
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AddPetScreen()),
+              );
+
+              // If returned true, refresh the pet list
+              if (result == true) {
+                setState(() {
+                  _petsFuture = _fetchPets();
+                });
+              }
             },
-            icon: const Icon(Icons.add, color: Colors.white, size: 20),
+            icon: const Icon(Icons.add, color: Colors.white),
             label: Text(
-              "Tambah Hewan",
+              "Tambahkan Peliharaan",
               style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF9F1C),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
           ),
         ],
@@ -444,7 +441,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Center(
               child: Text(
                 "Medical Record",
-                style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
             Positioned(
@@ -483,7 +484,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           color: const Color(0xFFFF9F1C), 
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: const Color(0xFFFF9F1C).withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5))
+            BoxShadow(
+              color: const Color(0xFFFF9F1C).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
           ]
         ),
         child: Row(
