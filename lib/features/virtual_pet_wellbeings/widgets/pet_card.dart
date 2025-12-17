@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/pet_model.dart';
 
-class PetCard extends StatelessWidget {
+class PetCard extends StatefulWidget {
   final Pet pet;
   final VoidCallback? onTap;
 
@@ -13,92 +13,113 @@ class PetCard extends StatelessWidget {
   });
 
   @override
+  State<PetCard> createState() => _PetCardState();
+}
+
+class _PetCardState extends State<PetCard> {
+  bool isFavorite = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        splashColor: Colors.orange.withOpacity(0.1), 
-        highlightColor: Colors.transparent, 
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          margin: const EdgeInsets.all(4), 
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF8F0),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03), 
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
+    String petIcon = widget.pet.type == 'Kucing' 
+        ? 'assets/images/icon_cat_main.png' 
+        : 'assets/images/icon_dog_main.png';
+
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white, // Background putih utama
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
             children: [
-              // Pet image + action buttons
-              Expanded(
-                flex: 5,
-                child: Stack(
+              // 1. ORNAMEN KUNING (bg_card tanpa background putih)
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/bg_card.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+
+              // 2. ICON HEWAN (Lebih kecil dan posisi pas)
+              Positioned(
+                left: -10,
+                bottom: 60,
+                child: Image.asset(
+                  petIcon,
+                  height: 200, // Ukuran diperkecil agar lebih clean
+                  fit: BoxFit.contain,
+                ),
+              ),
+
+              // 3. ACTION ICONS (Love & Magic Wand)
+              Positioned(
+                top: 20,
+                right: 20,
+                child: Row(
                   children: [
-                    Center(
-                      child: Image.asset(
-                        pet.imageUrl,
-                        fit: BoxFit.contain,
-                        height: double.infinity,
-                      ),
+                    _actionIcon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      isFavorite ? Colors.red : Colors.grey[300]!,
+                      () => setState(() => isFavorite = !isFavorite),
                     ),
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Column(
-                        children: [
-                          _cardActionIcon(Icons.favorite_border),
-                          const SizedBox(height: 12),
-                          _cardActionIcon(Icons.auto_fix_high),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(width: 10),
+                    _actionIcon(Icons.auto_fix_high, Colors.grey[300]!, () {}),
                   ],
                 ),
               ),
 
-              // Pet info section
-              Container(
-                padding: const EdgeInsets.all(24),
+              // 4. NAMA & TIPE (Rata Kiri di sisi kanan kartu)
+              Positioned(
+                right: 35,
+                top: 95,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start, // Rata Kiri
                   children: [
                     Text(
-                      pet.type,
+                      widget.pet.type,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.orange,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
-                      pet.name.toUpperCase(),
+                      widget.pet.name,
                       style: GoogleFonts.plusJakartaSans(
-                        fontSize: 32,
+                        fontSize: 34,
                         fontWeight: FontWeight.w800,
                         color: Colors.black,
-                        height: 1,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(child: _infoItem(Icons.cake_outlined, 'Umur', pet.age)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _infoItem(Icons.monitor_weight_outlined, 'Berat', pet.weight)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _infoItem(Icons.transgender, 'Kelamin', pet.gender)),
-                        const SizedBox(width: 16),
-                        Expanded(child: _infoItem(Icons.pets, 'Ras', pet.breed)),
-                      ],
-                    ),
+                  ],
+                ),
+              ),
+
+              // 5. INFO SECTION MINIMALIS (Tanpa box putih)
+              Positioned(
+                bottom: 25,
+                left: 20,
+                right: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _infoText(Icons.cake_outlined, 'Umur', widget.pet.age),
+                    _infoText(Icons.monitor_weight_outlined, 'Berat', widget.pet.weight),
+                    _infoText(Icons.transgender, 'Kelamin', widget.pet.gender),
+                    _infoText(Icons.pets_outlined, 'Ras', widget.pet.breed),
                   ],
                 ),
               ),
@@ -109,40 +130,41 @@ class PetCard extends StatelessWidget {
     );
   }
 
-  Widget _cardActionIcon(IconData icon) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
+  Widget _actionIcon(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.9),
+          border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        ),
+        child: Icon(icon, color: color, size: 20),
       ),
-      child: Icon(icon, color: Colors.grey[400], size: 24),
     );
   }
 
-  Widget _infoItem(IconData icon, String label, String value) {
+  Widget _infoText(IconData icon, String label, String value) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start, // Info Rata Kiri
       children: [
-        Icon(icon, color: Colors.grey[600], size: 20),
+        Icon(icon, size: 16, color: Colors.grey[400]),
         const SizedBox(height: 4),
         Text(
           label,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[600],
+            fontSize: 10,
+            color: Colors.grey[400],
           ),
         ),
-        const SizedBox(height: 2),
         Text(
           value,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Colors.orange,
+            color: Colors.orange[700],
           ),
-          textAlign: TextAlign.center,
         ),
       ],
     );
