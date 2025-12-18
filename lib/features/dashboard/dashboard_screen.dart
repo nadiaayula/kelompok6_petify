@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:kelompok6_adoptify/owner_profile/profile_page.dart'; 
-import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
+import 'package:kelompok6_adoptify/features/medical_record/medical_record_screen.dart';
 import 'package:kelompok6_adoptify/features/history/history_page.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_pet_screen.dart'; 
 import 'package:kelompok6_adoptify/features/rewards/screens/rewards_page.dart';

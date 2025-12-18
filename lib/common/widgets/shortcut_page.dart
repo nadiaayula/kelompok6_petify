@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/dashboard/dashboard_screen.dart';
-import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
+import 'package:kelompok6_adoptify/features/medical_record/medical_record_screen.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/vpm_home_screen.dart'; // Import VPMHomeScreen
 
 class ShortcutPage extends StatelessWidget {

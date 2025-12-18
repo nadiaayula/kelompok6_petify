@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../common/widgets/calendar_modal.dart';
-import '../../../common/widgets/shortcut_page.dart';
-import '../../../common/widgets/success_dialog.dart';
-import '../../../common/widgets/failure_dialog.dart';
+import '../../common/widgets/calendar_modal.dart';
+import '../../common/widgets/shortcut_page.dart';
+import '../../common/widgets/success_dialog.dart';
+import '../../common/widgets/failure_dialog.dart';
 import 'jenis_vaksinasi_modal.dart';
 
 class AddVaksinScreen extends StatefulWidget {
