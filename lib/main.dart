@@ -84,6 +84,7 @@ class _MyAppState extends State<MyApp> {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/home': (context) => const MainNavigation(),
+        '/vpm': (context) => const VpmHomeScreen(),
       },
     );
   }
