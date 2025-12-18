@@ -95,48 +95,91 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
           .select('*, pets(name, species, image_url), clinic(name, doctor_name)')
           .eq('pets.owner_id', userId);
 
-      // Apply species filter if not 'all'
-      if (_animalFilter != 'all') {
-        medicalQuery = medicalQuery.eq('pets.species', _animalFilter);
-      }
+            // Apply species filter if not 'all', using case-insensitive 'ilike'
+
+            if (_animalFilter != 'all') {
+
+              medicalQuery = medicalQuery.ilike('pets.species', _animalFilter);
+
+            }
+
+            
+
+            final medicalResponse = await medicalQuery.order('visit_date', ascending: false);
+
       
-      final medicalResponse = await medicalQuery.order('visit_date', ascending: false);
 
-      // Filter out records where 'pets' is null and then map
-      List<MedicalRecord> medicalRecords = (medicalResponse as List)
-          .where((data) => data['pets'] != null)
-          .map((data) {
-        final petData = data['pets'] as Map<String, dynamic>;
-        final clinicData = data['clinic'] as Map<String, dynamic>?;
-        return MedicalRecord(
-          id: data['id'],
-          petId: data['pet_id'],
-          petName: petData['name'],
-          petSpecies: petData['species'],
-          petImageUrl: petData['image_url'],
-          title: 'Pemeriksaan Medis', // Generic title for medical records
-          recordDate: DateTime.parse(data['visit_date']), // Use visit_date
-          clinicName: clinicData?['name'],
-          doctorName: clinicData?['doctor_name'],
-          recordType: 'medical',
-          medicalNotes: data['medical_notes'],
-          healthCondition: data['pet_health_condition'],
-          hasXray: data['has_xray'],
-        );
-      }).toList();
+      
 
-      // Base query for Vaccination Records
-      var vaccinationQuery = Supabase.instance.client
-          .from('vaccination_records')
-          .select('*, pets(name, species, image_url), clinic(name)')
-          .eq('pets.owner_id', userId);
+            // Filter out records where 'pets' is null and then map
 
-      // Apply species filter if not 'all'
-      if (_animalFilter != 'all') {
-        vaccinationQuery = vaccinationQuery.eq('pets.species', _animalFilter);
-      }
+            List<MedicalRecord> medicalRecords = (medicalResponse as List)
 
-      final vaccinationResponse = await vaccinationQuery.order('vaccination_date', ascending: false);
+                .where((data) => data['pets'] != null)
+
+                .map((data) {
+
+              final petData = data['pets'] as Map<String, dynamic>;
+
+              final clinicData = data['clinic'] as Map<String, dynamic>?;
+
+              return MedicalRecord(
+
+                id: data['id'],
+
+                petId: data['pet_id'],
+
+                petName: petData['name'],
+
+                petSpecies: petData['species'],
+
+                petImageUrl: petData['image_url'],
+
+                title: 'Pemeriksaan Medis', // Generic title for medical records
+
+                recordDate: DateTime.parse(data['visit_date']), // Use visit_date
+
+                clinicName: clinicData?['name'],
+
+                doctorName: clinicData?['doctor_name'],
+
+                recordType: 'medical',
+
+                medicalNotes: data['medical_notes'],
+
+                healthCondition: data['pet_health_condition'],
+
+                hasXray: data['has_xray'],
+
+              );
+
+            }).toList();
+
+      
+
+            // Base query for Vaccination Records
+
+            var vaccinationQuery = Supabase.instance.client
+
+                .from('vaccination_records')
+
+                .select('*, pets(name, species, image_url), clinic(name)')
+
+                .eq('pets.owner_id', userId);
+
+      
+
+            // Apply species filter if not 'all', using case-insensitive 'ilike'
+
+            if (_animalFilter != 'all') {
+
+              vaccinationQuery = vaccinationQuery.ilike('pets.species', _animalFilter);
+
+            }
+
+      
+
+            final vaccinationResponse = await vaccinationQuery.order('vaccination_date', ascending: false);
 
       // Filter out records where 'pets' is null and then map
       List<MedicalRecord> vaccinationRecords = (vaccinationResponse as List)
@@ -403,11 +446,11 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                         child: Text('Semua'),
                       ),
                       const PopupMenuItem<String>(
-                        value: 'kucing',
+                        value: 'cat',
                         child: Text('Kucing'),
                       ),
                       const PopupMenuItem<String>(
-                        value: 'anjing',
+                        value: 'dog',
                         child: Text('Anjing'),
                       ),
                     ],
