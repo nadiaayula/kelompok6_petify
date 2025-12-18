@@ -74,7 +74,7 @@ setState(() {
     barrierDismissible: true,
     builder: (context) {
       return Dialog(
-        backgroundColor: const Color(0xFFF3EDF7),
+        backgroundColor: const Color.fromARGB(255, 250, 250, 250),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
@@ -86,7 +86,7 @@ setState(() {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Log Out',
+                'Keluar',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -94,7 +94,7 @@ setState(() {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Kamu akan logout akun, yakin?',
+                'Kamu akan keluar, yakin?',
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.4,
@@ -123,7 +123,7 @@ setState(() {
                       _deleteAccount();
                     },
                     child: const Text(
-                      'Logout',
+                      'Keluar',
                       style: TextStyle(
                         color: Colors.red,
                         fontSize: 14,
@@ -234,7 +234,7 @@ setState(() {
           _Section(title: 'Akun'),
           _Tile(
             icon: Icons.delete_outline,
-            title: 'Hapus Akun',
+            title: 'Keluar',
             onTap: _confirmDeleteAccount,
           ),
           const SizedBox(height: 40),
