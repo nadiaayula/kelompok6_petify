@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_vaksin_screen.dart';
+import 'package:kelompok6_adoptify/features/medical_record/add_vaksin_screen.dart';
 import 'package:kelompok6_adoptify/features/dashboard/dashboard_screen.dart';
-import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
+import 'package:kelompok6_adoptify/features/medical_record/add_medical_record_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
