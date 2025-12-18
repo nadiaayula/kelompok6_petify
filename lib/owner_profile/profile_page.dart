@@ -15,6 +15,8 @@ class _ProfilePageState extends State<ProfilePage> {
   String displayName = "Loading...";
   String province = "Loading...";
   String? avatarUrl;
+  String userCode = "";
+  int userPoints = 0;
 
   @override
   void initState() {
@@ -23,20 +25,45 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> loadProfileData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final supabase = Supabase.instance.client;
+final user = supabase.auth.currentUser;
 
-    final data = await Supabase.instance.client
-        .from("owner_profile")
-        .select()
-        .eq("user_id", user.id)
-        .single();
+if (user == null) return;
 
-    setState(() {
-      displayName = data['display_name'] ?? "User";
-      province = data['province'] ?? "-";
-      avatarUrl = data['avatar_url'];
-    });
+// OWNER PROFILE
+final profileResponse = await supabase
+    .from('owner_profile')
+    .select('display_name, avatar_url, province')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+// USER POINTS (kolom: total_point)
+final pointsResponse = await supabase
+    .from('user_points')
+    .select('total_points')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+if (!mounted) return;
+
+setState(() {
+  // PROFILE
+  if (profileResponse != null) {
+    displayName = profileResponse['display_name'] ?? "User";
+    province = profileResponse['province'] ?? "Belum ada lokasi";
+    avatarUrl = profileResponse['avatar_url'];
+  } else {
+    displayName = "User";
+    province = "Belum ada lokasi";
+  }
+
+  // KODE USER → 5 karakter awal UUID
+  userCode = user.id.substring(0, 5);
+
+  // POINTS
+  userPoints = pointsResponse?['total_points'] ?? 0;
+});
+
   }
 
     /* ================= HAPUS AKUN ================= */
@@ -152,7 +179,10 @@ class _ProfilePageState extends State<ProfilePage> {
             avatarUrl: avatarUrl,
             name: displayName,
             province: province,
+            userCode: userCode,
+            userPoints: userPoints,
           ),
+
 
           const SizedBox(height: 24),
 
@@ -260,11 +290,15 @@ class _ProfileCard extends StatelessWidget {
   final String? avatarUrl;
   final String name;
   final String province;
+  final String userCode;
+  final int userPoints;
 
   const _ProfileCard({
     required this.avatarUrl,
     required this.name,
     required this.province,
+    required this.userCode,
+    required this.userPoints,
   });
 
   @override
@@ -297,21 +331,29 @@ class _ProfileCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(name,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
                             style: const TextStyle(
-                                fontSize: 19, fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 4),
-                        Text(
-                          "#56790 · 1.500 points",
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey.shade600),
-                        ),
-                      ],
-                    ),
-                  ),
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            userCode.trim().isEmpty
+                                ? "Loading points..."
+                                : "#$userCode · $userPoints points",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),     
                   InkWell(
                     onTap: () {
                       Navigator.push(
