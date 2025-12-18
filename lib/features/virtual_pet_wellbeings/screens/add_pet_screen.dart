@@ -22,8 +22,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
   final List<String> _catBreeds = ['Angora', 'Domestik', 'Ragdoll', 'Persian', 'Siamese'];
   final List<String> _dogBreeds = ['Golden Retriever', 'Poodle', 'Bulldog', 'Beagle'];
 
-  final List<String> _selectedPhotos = [];
-
   @override
   void dispose() {
     _nameController.dispose();
