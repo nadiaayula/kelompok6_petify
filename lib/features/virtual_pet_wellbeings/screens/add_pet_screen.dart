@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Wajib ada
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 
 class AddPetScreen extends StatefulWidget {
   const AddPetScreen({super.key});
@@ -9,9 +9,9 @@ class AddPetScreen extends StatefulWidget {
 }
 
 class _AddPetScreenState extends State<AddPetScreen> {
-  String? _selectedPetType; // 'Kucing' / 'Anjing'
+  String? _selectedPetType;
   String? _selectedBreed;
-  String? _selectedGender; // 'Jantan' / 'Betina'
+  String? _selectedGender; 
   int? _ageMonths;
   int? _ageYears;
   bool _isLoading = false;
@@ -63,7 +63,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 
-  // FUNGSI SIMPAN KE SUPABASE (Update di add_pet_screen.dart)
+  // FUNGSI SIMPAN KE SUPABASE
   Future<void> _submit() async {
     if (!_validateForm()) return;
 
@@ -84,7 +84,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
       await Supabase.instance.client.from('pets').insert({
         'owner_id': user.id,
         'name': _nameController.text.trim(),
-        'species': _selectedPetType == 'Kucing' ? 'cat' : 'dog', // Sesuaikan jika enum species juga bahasa Inggris
+        'species': _selectedPetType == 'Kucing' ? 'cat' : 'dog',
         'breed': _selectedBreed,
         'gender': _selectedGender == 'Jantan' ? 'male' : 'female', 
         'birth_date': birthDate.toIso8601String(),
@@ -258,7 +258,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
               ],
             ),
           ),
-          // Loading Overlay jika sedang submit
+         
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.1),
