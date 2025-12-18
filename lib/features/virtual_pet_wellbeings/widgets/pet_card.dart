@@ -21,9 +21,9 @@ class _PetCardState extends State<PetCard> {
 
   @override
   Widget build(BuildContext context) {
-    String petIcon = widget.pet.species.toLowerCase() == 'Kucing' 
-        ? 'assets/images/icon_cat_main.png' 
-        : 'assets/images/icon_dog_main.png';
+    String petIcon = widget.pet.species.toLowerCase() == 'cat' || widget.pet.species.toLowerCase() == 'kucing' 
+    ? 'assets/images/icon_cat_main.png' 
+    : 'assets/images/icon_dog_main.png';
 
     return GestureDetector(
       onTap: widget.onTap,

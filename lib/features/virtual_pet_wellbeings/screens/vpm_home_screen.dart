@@ -31,10 +31,18 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
   Future<void> _fetchPets() async {
     setState(() => _isLoading = true);
     try {
+      final user = Supabase.instance.client.auth.currentUser;
+      
+      if (user == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
       final response = await Supabase.instance.client
           .from('pets')
           .select()
-          .order('created_at', ascending: false); // Urutkan dari yang terbaru
+          .eq('owner_id', user.id) 
+          .order('created_at', ascending: false);
 
       final data = response as List<dynamic>;
       
@@ -43,13 +51,8 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('Error fetching pets: $e');
+      debugPrint('Error: $e');
       setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengambil data: $e')),
-        );
-      }
     }
   }
 
