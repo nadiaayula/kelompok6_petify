@@ -291,12 +291,12 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
                 
                 // Positioned Title
                 Positioned(
-                  top: 70, // Moved down a bit
+                  top: 50, // Moved down a bit
                   child: Text(
                     'Medical Record',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 36,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
