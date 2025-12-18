@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../common/widgets/calendar_modal.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -65,34 +66,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() => isLoading = false);
   }
 
-  // ================= DATE PICKER =================
-  Future<void> _pickBirthDate() async {
-    final picked = await showDatePicker(
+  void _showCalendarModal() {
+    showDialog(
       context: context,
-      initialDate: birthDate ?? DateTime(2000),
-      firstDate: DateTime(1950),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.black,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        birthDate = picked;
-        _birthDateController.text =
-            DateFormat('dd MMMM yyyy').format(picked);
-      });
-    }
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const CalendarModal(),
+      ),
+    ).then((date) {
+      if (date != null) {
+        setState(() {
+          birthDate = date;
+          _birthDateController.text = DateFormat('dd MMMM yyyy').format(date);
+        });
+      }
+    });
   }
 
   // ================= ALERT + UPLOAD =================
@@ -303,7 +293,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       child: TextField(
         controller: _birthDateController,
         readOnly: true,
-        onTap: _pickBirthDate,
+        onTap: _showCalendarModal,
         decoration: InputDecoration(
           hintText: 'Tanggal Lahir',
           filled: true,
