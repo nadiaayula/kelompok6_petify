@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Wajib ada
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/pet_model.dart';
 import '../widgets/pet_card.dart';
 import '../screens/add_pet_screen.dart';
@@ -25,7 +24,7 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchPets(); // Ambil data saat pertama kali buka
+    _fetchPets(); 
   }
 
   // FUNGSI AMBIL DATA DARI SUPABASE
@@ -69,8 +68,6 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
       context,
       MaterialPageRoute(builder: (_) => const AddPetScreen()),
     );
-
-    // Jika result adalah true (berhasil simpan), maka refresh data
     if (result == true) {
       _fetchPets();
     }
@@ -135,14 +132,42 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
                 children: [
                   Row(
                     children: [
-                      const Text('🐱', style: TextStyle(fontSize: 24)),
+                      if (pets.isNotEmpty)
+                        SizedBox(
+                          height: 32,
+                          width: (pets.length > 3 ? 3 : pets.length) * 22.0 + 10, 
+                          child: Stack(
+                            clipBehavior: Clip.none, 
+                            children: List.generate(
+                              pets.length > 3 ? 3 : pets.length,
+                              (index) => Positioned(
+                                left: index * 20.0, 
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white, width: 2),
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: Colors.grey[100],
+                                    backgroundImage: AssetImage(
+                                      pets[index].species == 'Kucing'
+                                          ? (index % 2 == 0 ? 'assets/images/cat_avatar_1.png' : 'assets/images/cat_avatar_2.png')
+                                          : 'assets/images/dog_avatar_1.png',
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      
                       const SizedBox(width: 8),
-                      const Text('🐱', style: TextStyle(fontSize: 24)),
-                      const SizedBox(width: 8),
-                      const Text('🐶', style: TextStyle(fontSize: 24)),
-                      const SizedBox(width: 12),
+
                       Text(
-                        '${pets.length}+ Pet lainnya',
+                        pets.length <= 3 
+                            ? 'Total ${pets.length} Pet' 
+                            : '${pets.length - 3}+ Pet lainnya',
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
