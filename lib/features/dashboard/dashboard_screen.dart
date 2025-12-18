@@ -76,12 +76,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String userProvince = "Loading...";
   String? userAvatar;
   int userPoints = 0; 
+  
+  // NEW: State for filtered rewards
+  List<Map<String, dynamic>> affordableRewards = [];
+  bool isLoadingRewards = true;
 
   @override
   void initState() {
     super.initState();
     fetchUserData(); 
     _petsFuture = _fetchPets();
+    _fetchAffordableRewards(); // NEW: Fetch rewards
   }
 
   @override
@@ -133,6 +138,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             userPoints = pointsResponse['total_points'] ?? 0;
           }
         });
+        
+        // Reload rewards after points updated
+        _fetchAffordableRewards();
       }
     } catch (e) {
       debugPrint("Error fetching user data: $e");
@@ -142,6 +150,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
         });
       }
     }
+  }
+
+  // NEW: Fetch rewards that user can afford
+  Future<void> _fetchAffordableRewards() async {
+    try {
+      setState(() => isLoadingRewards = true);
+      
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        _loadFallbackRewards();
+        return;
+      }
+      
+      // Get user's total points
+      final pointsResult = await Supabase.instance.client.rpc(
+        'get_user_total_points',
+        params: {'p_user_id': user.id},
+      );
+      
+      final totalPoints = pointsResult as int? ?? 0;
+      
+      // Get all rewards from 'food' category
+      final rewardsResult = await Supabase.instance.client.rpc(
+        'get_rewards',
+        params: {
+          'p_category': 'food',
+          'p_search_query': null,
+        },
+      );
+      
+      if (mounted) {
+        setState(() {
+          userPoints = totalPoints;
+          
+          if (rewardsResult is List && rewardsResult.isNotEmpty) {
+            // Filter rewards that user can afford
+            affordableRewards = List<Map<String, dynamic>>.from(rewardsResult)
+                .where((reward) => (reward['points_required'] as int? ?? 0) <= totalPoints)
+                .take(3) // Take only first 3
+                .toList();
+          } else {
+            _loadFallbackRewards();
+          }
+          
+          isLoadingRewards = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching affordable rewards: $e");
+      _loadFallbackRewards();
+    }
+  }
+  
+  void _loadFallbackRewards() {
+    final allRewards = [
+      {'id': '23f65437-7a02-4323-8de0-b4d03e395757', 'name': 'Pasir Kucing', 'category': 'food', 'icon_path': 'assets/images/pasir.png', 'points_required': 1000},
+      {'id': '347daa29-7905-4c63-875b-790f3b1e3101', 'name': 'Tempat Tidur', 'category': 'food', 'icon_path': 'assets/images/bed.png', 'points_required': 1300},
+      {'id': '592089ac-362a-4687-b35a-d4a099012f61', 'name': 'Nutrisi Kucing', 'category': 'food', 'icon_path': 'assets/images/nutrisi.png', 'points_required': 1400},
+      {'id': '459aede5-4a2f-49e7-bb6b-54c37d0ba474', 'name': 'Kandang', 'category': 'food', 'icon_path': 'assets/images/kandang.png', 'points_required': 2100},
+      {'id': '1fe82384-8ee9-4297-bbff-1fdbf729b072', 'name': 'Rumah Kucing', 'category': 'food', 'icon_path': 'assets/images/rumah.png', 'points_required': 15000},
+    ];
+    
+    setState(() {
+      affordableRewards = allRewards
+          .where((r) => (r['points_required'] as int? ?? 0) <= userPoints)
+          .take(3)
+          .toList();
+      isLoadingRewards = false;
+    });
   }
 
   Future<List<Pet>> _fetchPets() async {
@@ -311,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // --- REWARDS SECTION (UPDATED) ---
+              // --- REWARDS SECTION (UPDATED WITH FILTERED DATA) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
@@ -340,7 +417,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // REWARD LIST -> Directs to Confirmation Page
+                    // REWARD LIST -> Now shows filtered rewards
                     _buildRewardsList(), 
                     const SizedBox(height: 24),
                   ],
@@ -523,35 +600,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
-
+  // UPDATED: Now uses dynamic filtered data from Supabase
   Widget _buildRewardsList() {
-    final rewards = [
-      {"name": "Pet Kit", "points": "500", "image": "assets/images/medical_kit.png"},
-      {"name": "Makanan", "points": "250", "image": "assets/images/makanan.png"},
-      {"name": "Sisir Bulu", "points": "150", "image": "assets/images/sisir.png"},
-    ];
+    if (isLoadingRewards) {
+      return const SizedBox(
+        height: 160,
+        child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+      );
+    }
+
+    if (affordableRewards.isEmpty) {
+      return Container(
+        height: 160,
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              'Kumpulkan lebih banyak poin untuk membuka rewards! 🎁',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return SizedBox(
       height: 160, 
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: rewards.length,
+        itemCount: affordableRewards.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-           final item = rewards[index];
+           final item = affordableRewards[index];
+           final imageUrl = item['icon_path'] ?? '';
+           final rewardName = item['name'] ?? 'Reward';
+           final pointsRequired = item['points_required']?.toString() ?? '0';
+           final rewardId = item['id']?.toString() ?? 'unknown';
+           
            return GestureDetector(
              onTap: () {
-               // Direct to Item Page (RewardConfirmationPage)
+               // Direct to RewardConfirmationPage with real data
                Navigator.push(
                  context,
                  MaterialPageRoute(
                    builder: (context) => RewardConfirmationPage(
-                     rewardName: item['name']!,
-                     rewardPoints: item['points']!,
-                     imageUrl: item['image'],
-                     // Add other params if needed
-                     rewardId: 'dummy-$index', // Fallback ID
+                     rewardId: rewardId,
+                     rewardName: rewardName,
+                     rewardPoints: '$pointsRequired points',
+                     imageUrl: imageUrl,
                    )
                  ),
                );
@@ -574,15 +679,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                  mainAxisAlignment: MainAxisAlignment.center,
                  children: [
                    Expanded(
-                     child: Image.asset(
-                       item['image']!, 
-                       fit: BoxFit.contain,
-                       errorBuilder: (c,e,s) => const Icon(Icons.card_giftcard, size: 40, color: Colors.orange)
-                     ),
+                     child: imageUrl.isNotEmpty
+                         ? (imageUrl.startsWith('http')
+                             ? Image.network(
+                                 imageUrl,
+                                 fit: BoxFit.contain,
+                                 errorBuilder: (c, e, s) => const Icon(Icons.card_giftcard, size: 40, color: Colors.orange),
+                               )
+                             : Image.asset(
+                                 imageUrl,
+                                 fit: BoxFit.contain,
+                                 errorBuilder: (c, e, s) => const Icon(Icons.card_giftcard, size: 40, color: Colors.orange),
+                               ))
+                         : const Icon(Icons.card_giftcard, size: 40, color: Colors.orange),
                    ),
                    const SizedBox(height: 8),
                    Text(
-                     item['name']!, 
+                     rewardName, 
                      style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14), 
                      textAlign: TextAlign.center,
                      maxLines: 1,
@@ -590,7 +703,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                    ),
                    const SizedBox(height: 4),
                    Text(
-                     "${item['points']} pts", 
+                     "$pointsRequired pts", 
                      style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w600)
                    ),
                  ],

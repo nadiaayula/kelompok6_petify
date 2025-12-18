@@ -13,7 +13,7 @@ class _RewardsPageState extends State<RewardsPage> {
   final supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
   
-  String selectedCategory = 'health';
+  String selectedCategory = 'food';
   int totalPoints = 0;
   List<Map<String, dynamic>> allRewards = [];
   List<Map<String, dynamic>> kebutuhanUtamaRewards = [];
@@ -37,23 +37,19 @@ class _RewardsPageState extends State<RewardsPage> {
     try {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        // Fallback ke dummy data kalau belum login
         _loadFallbackData();
         return;
       }
       
-      // Load total points
       final pointsResult = await supabase.rpc('get_user_total_points', params: {
         'p_user_id': userId,
       });
       
-      // Load all rewards
       final rewardsResult = await supabase.rpc('get_rewards', params: {
         'p_category': null,
         'p_search_query': null,
       });
       
-      // Load kebutuhan utama rewards
       final utamaResult = await supabase.rpc('get_rewards', params: {
         'p_category': 'food',
         'p_search_query': null,
@@ -64,37 +60,55 @@ class _RewardsPageState extends State<RewardsPage> {
         if (rewardsResult is List && rewardsResult.isNotEmpty) {
           allRewards = List<Map<String, dynamic>>.from(rewardsResult);
         } else {
-          // Fallback kalau database kosong
           _loadFallbackData();
           return;
         }
         if (utamaResult is List) {
-          kebutuhanUtamaRewards = List<Map<String, dynamic>>.from(utamaResult);
+          // Filter rewards yang poinnya <= total points user
+          kebutuhanUtamaRewards = List<Map<String, dynamic>>.from(utamaResult)
+              .where((reward) => (reward['points_required'] as int? ?? 0) <= totalPoints)
+              .toList();
         }
         isLoading = false;
       });
     } catch (e) {
       print('Error loading rewards: $e');
-      // Fallback kalau ada error
       _loadFallbackData();
     }
   }
   
   void _loadFallbackData() {
-    // Dummy data kalau database kosong atau error
     setState(() {
       allRewards = [
-        {'id': 'dummy-1', 'name': 'Pet Kit', 'category': 'utama', 'icon_path': 'assets/images/medical_kit.png', 'points_required': 500, 'stock': 50, 'is_active': true},
-        {'id': 'dummy-2', 'name': 'Makanan', 'category': 'utama', 'icon_path': 'assets/images/makanan.png', 'points_required': 250, 'stock': 100, 'is_active': true},
-        {'id': 'dummy-3', 'name': 'Sisir Bulu', 'category': 'utama', 'icon_path': 'assets/images/sisir.png', 'points_required': 150, 'stock': 75, 'is_active': true},
-        {'id': 'dummy-4', 'name': 'Paket Medis', 'category': 'kesehatan', 'icon_path': 'assets/images/medical_kit.png', 'points_required': 1310, 'stock': 30, 'is_active': true},
-        {'id': 'dummy-5', 'name': 'Nutrisi Kucing', 'category': 'kesehatan', 'icon_path': 'assets/images/makanan.png', 'points_required': 1400, 'stock': 40, 'is_active': true},
-        {'id': 'dummy-6', 'name': 'Sabun Mandi Kucing', 'category': 'kesehatan', 'icon_path': 'assets/images/mandi.png', 'points_required': 430, 'stock': 60, 'is_active': true},
-        {'id': 'dummy-7', 'name': 'Rumah Kucing', 'category': 'tambahan', 'icon_path': 'assets/images/rumah.png', 'points_required': 15000, 'stock': 10, 'is_active': true},
-        {'id': 'dummy-8', 'name': 'Bola Mainan', 'category': 'mainan', 'icon_path': 'assets/images/bola.png', 'points_required': 200, 'stock': 80, 'is_active': true},
+        // Kategori Food (Utama)
+        {'id': '1fe82384-8ee9-4297-bbff-1fdbf729b072', 'name': 'Rumah Kucing', 'category': 'food', 'icon_path': 'assets/images/rumah.png', 'points_required': 15000, 'stock': 10, 'is_active': true},
+        {'id': '23f65437-7a02-4323-8de0-b4d03e395757', 'name': 'Pasir Kucing', 'category': 'food', 'icon_path': 'assets/images/pasir.png', 'points_required': 1000, 'stock': 65, 'is_active': true},
+        {'id': '347daa29-7905-4c63-875b-790f3b1e3101', 'name': 'Tempat Tidur', 'category': 'food', 'icon_path': 'assets/images/bed.png', 'points_required': 1300, 'stock': 45, 'is_active': true},
+        {'id': '459aede5-4a2f-49e7-bb6b-54c37d0ba474', 'name': 'Kandang', 'category': 'food', 'icon_path': 'assets/images/kandang.png', 'points_required': 2100, 'stock': 20, 'is_active': true},
+        {'id': '592089ac-362a-4687-b35a-d4a099012f61', 'name': 'Nutrisi Kucing', 'category': 'food', 'icon_path': 'assets/images/nutrisi.png', 'points_required': 1400, 'stock': 99, 'is_active': true},
+        
+        // Kategori Accessories (Tambahan)
+        {'id': '647daa29-7905-4c63-875b-790f3b1e3102', 'name': 'Sabun Mandi Kucing', 'category': 'accessories', 'icon_path': 'assets/images/sabun.png', 'points_required': 430, 'stock': 60, 'is_active': true},
+        {'id': '76c4f279-4ae3-4f38-b649-663dbe0403d1', 'name': 'Kalung', 'category': 'accessories', 'icon_path': 'assets/images/kalung.png', 'points_required': 870, 'stock': 50, 'is_active': true},
+        {'id': '88e2bf31-8514-4137-a188-0ba60529fc74', 'name': 'Tempat Makan', 'category': 'accessories', 'icon_path': 'assets/images/tempat_makan.png', 'points_required': 700, 'stock': 75, 'is_active': true},
+        {'id': '9cb1b6ab-5820-4ac5-97fa-ec263fd3d45c', 'name': 'Boneka Tikus', 'category': 'accessories', 'icon_path': 'assets/images/tikus.png', 'points_required': 300, 'stock': 70, 'is_active': true},
+        {'id': '10a11c50-2a92-4cad-955e-c6ef341fee51', 'name': 'Sekop Pasir', 'category': 'accessories', 'icon_path': 'assets/images/sekop.png', 'points_required': 200, 'stock': 80, 'is_active': true},
+        
+        // Kategori Health (Kesehatan)
+        {'id': '1159aede-4a2f-49e7-bb6b-54c37d0ba475', 'name': 'Paket Medis', 'category': 'health', 'icon_path': 'assets/images/paket_medis.png', 'points_required': 1310, 'stock': 30, 'is_active': true},
+        {'id': '1292089a-362a-4687-b35a-d4a099012f62', 'name': 'Nutrisi Kucing', 'category': 'health', 'icon_path': 'assets/images/nutrisi.png', 'points_required': 1400, 'stock': 99, 'is_active': true},
+        {'id': '1347daa2-7905-4c63-875b-790f3b1e3103', 'name': 'Sabun Mandi Kucing', 'category': 'health', 'icon_path': 'assets/images/sabun.png', 'points_required': 430, 'stock': 60, 'is_active': true},
+        
+        // Kategori Toys (Mainan)
+        {'id': '145d8606-63e4-4697-97b5-3472dbb402c1', 'name': 'Boneka Tulang', 'category': 'toys', 'icon_path': 'assets/images/boneka_tulang.png', 'points_required': 430, 'stock': 55, 'is_active': true},
+        {'id': '155d8606-63e4-4697-97b5-3472dbb402c2', 'name': 'Bola', 'category': 'toys', 'icon_path': 'assets/images/bola.png', 'points_required': 230, 'stock': 80, 'is_active': true},
+        {'id': '16cb1b6a-5820-4ac5-97fa-ec263fd3d45d', 'name': 'Boneka Tikus', 'category': 'toys', 'icon_path': 'assets/images/tikus.png', 'points_required': 300, 'stock': 70, 'is_active': true},
       ];
       
-      kebutuhanUtamaRewards = allRewards.where((r) => r['category'] == 'food').toList();
+      // Filter rewards yang poinnya <= total points user
+      kebutuhanUtamaRewards = allRewards
+          .where((r) => r['category'] == 'food' && (r['points_required'] as int? ?? 0) <= totalPoints)
+          .toList();
       isLoading = false;
     });
   }
@@ -289,30 +303,44 @@ class _RewardsPageState extends State<RewardsPage> {
 
                           const SizedBox(height: 16),
 
-                          // Horizontal scroll items
+                          // Horizontal scroll items - FILTERED by user points
                           SizedBox(
                             height: 220,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              children: [
-                                _buildRewardCard(
-                                  'Reward yang\nSesuai\nUntukmu!',
-                                  '',
-                                  Colors.green[100]!,
-                                  isSpecial: true,
-                                ),
-                                ...kebutuhanUtamaRewards.map((reward) {
-                                  return _buildRewardCard(
-                                    reward['name'] ?? '',
-                                    '${reward['points_required']} points',
-                                    Colors.white,
-                                    imageUrl: reward['icon_path'],
-                                    rewardId: reward['id'],
-                                  );
-                                }).toList(),
-                              ],
-                            ),
+                            child: kebutuhanUtamaRewards.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Text(
+                                        'Kumpulkan lebih banyak poin untuk membuka rewards! 🎁',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  )
+                                : ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    children: [
+                                      _buildRewardCard(
+                                        'Reward yang\nSesuai\nUntukmu!',
+                                        '',
+                                        Colors.green[100]!,
+                                        isSpecial: true,
+                                      ),
+                                      ...kebutuhanUtamaRewards.map((reward) {
+                                        return _buildRewardCard(
+                                          reward['name'] ?? '',
+                                          '${reward['points_required']} points',
+                                          Colors.white,
+                                          imageUrl: reward['icon_path'],
+                                          rewardId: reward['id'],
+                                        );
+                                      }).toList(),
+                                    ],
+                                  ),
                           ),
 
                           const SizedBox(height: 24),
@@ -359,7 +387,7 @@ class _RewardsPageState extends State<RewardsPage> {
                               scrollDirection: Axis.horizontal,
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               children: [
-                                _buildCategoryTab('Kebutuhan Utama', 'food'),
+                                _buildCategoryTab('Utama', 'food'),
                                 _buildCategoryTab('Tambahan', 'accessories'),
                                 _buildCategoryTab('Kesehatan', 'health'),
                                 _buildCategoryTab('Mainan', 'toys'),
@@ -371,12 +399,10 @@ class _RewardsPageState extends State<RewardsPage> {
 
                           // Reward items list
                           ...getFilteredRewards().map((reward) {
-                            return _buildRewardItem(
+                            return _buildRewardItemNew(
                               reward['name'] ?? '',
                               'Dibutuhkan minimal perolehan',
                               '${reward['points_required']} points',
-                              Icons.card_giftcard,
-                              Colors.orange[100]!,
                               rewardId: reward['id'],
                               imageUrl: reward['icon_path'],
                             );
@@ -503,7 +529,7 @@ class _RewardsPageState extends State<RewardsPage> {
     );
   }
 
-  Widget _buildRewardItem(String title, String subtitle, String points, IconData icon, Color iconBg, {String? rewardId, String? imageUrl}) {
+  Widget _buildRewardItemNew(String title, String subtitle, String points, {String? rewardId, String? imageUrl}) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -535,14 +561,20 @@ class _RewardsPageState extends State<RewardsPage> {
         ),
         child: Row(
           children: [
+            // Gambar produk
             Container(
-              width: 60,
-              height: 60,
+              width: 70,
+              height: 70,
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: iconBg,
+                color: Colors.orange[50],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 32),
+              child: imageUrl != null
+                  ? (imageUrl.startsWith('http')
+                      ? Image.network(imageUrl, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Icon(Icons.card_giftcard, size: 32))
+                      : Image.asset(imageUrl, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Icon(Icons.card_giftcard, size: 32)))
+                  : const Icon(Icons.card_giftcard, size: 32, color: Colors.orange),
             ),
             const SizedBox(width: 16),
             Expanded(
