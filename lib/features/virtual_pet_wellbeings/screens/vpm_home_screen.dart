@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'; // Wajib ada
 import '../models/pet_model.dart';
 import '../widgets/pet_card.dart';
 import '../screens/add_pet_screen.dart';
+import '../../../common/widgets/shortcut_page.dart';
 
 class VpmHomeScreen extends StatefulWidget {
   const VpmHomeScreen({super.key});
@@ -95,7 +96,15 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
                     onTap: () => Navigator.pop(context),
                   ),
                   const Icon(Icons.pets, color: Colors.orange, size: 36),
-                  _squareIconButton(icon: Icons.menu, onTap: () {}),
+                  _squareIconButton(
+                    icon: Icons.menu, 
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ShortcutPage()),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
