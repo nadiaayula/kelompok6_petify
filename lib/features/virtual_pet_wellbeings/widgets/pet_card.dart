@@ -30,7 +30,7 @@ class _PetCardState extends State<PetCard> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
-          color: Colors.white, // Background putih utama
+          color: Colors.white, 
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -44,7 +44,6 @@ class _PetCardState extends State<PetCard> {
           borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
-              // 1. ORNAMEN KUNING (bg_card tanpa background putih)
               Positioned.fill(
                 child: Image.asset(
                   'assets/images/bg_card.png',
@@ -52,18 +51,16 @@ class _PetCardState extends State<PetCard> {
                 ),
               ),
 
-              // 2. ICON HEWAN (Lebih kecil dan posisi pas)
               Positioned(
                 left: -10,
                 bottom: 60,
                 child: Image.asset(
                   petIcon,
-                  height: 200, // Ukuran diperkecil agar lebih clean
+                  height: 200,
                   fit: BoxFit.contain,
                 ),
               ),
 
-              // 3. ACTION ICONS (Love & Magic Wand)
               Positioned(
                 top: 20,
                 right: 20,
@@ -80,12 +77,11 @@ class _PetCardState extends State<PetCard> {
                 ),
               ),
 
-              // 4. NAMA & TIPE (Rata Kiri di sisi kanan kartu)
               Positioned(
                 right: 35,
                 top: 95,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, // Rata Kiri
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       widget.pet.species,
@@ -108,7 +104,6 @@ class _PetCardState extends State<PetCard> {
                 ),
               ),
 
-              // 5. INFO SECTION MINIMALIS (Tanpa box putih)
               Positioned(
                 bottom: 25,
                 left: 20,
@@ -147,7 +142,7 @@ class _PetCardState extends State<PetCard> {
 
   Widget _infoText(IconData icon, String label, String value) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start, // Info Rata Kiri
+      crossAxisAlignment: CrossAxisAlignment.start, 
       children: [
         Icon(icon, size: 16, color: Colors.grey[400]),
         const SizedBox(height: 4),

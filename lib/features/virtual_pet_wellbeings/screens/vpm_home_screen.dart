@@ -24,7 +24,7 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchPets(); // Ambil data saat pertama kali buka
+    _fetchPets(); 
   }
 
   // FUNGSI AMBIL DATA DARI SUPABASE
@@ -68,8 +68,6 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
       context,
       MaterialPageRoute(builder: (_) => const AddPetScreen()),
     );
-
-    // Jika result adalah true (berhasil simpan), maka refresh data
     if (result == true) {
       _fetchPets();
     }
@@ -137,14 +135,13 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
                       if (pets.isNotEmpty)
                         SizedBox(
                           height: 32,
-                          // KUNCI: Tambahkan width agar Stack punya ruang untuk tampil
                           width: (pets.length > 3 ? 3 : pets.length) * 22.0 + 10, 
                           child: Stack(
-                            clipBehavior: Clip.none, // Agar avatar tidak terpotong
+                            clipBehavior: Clip.none, 
                             children: List.generate(
                               pets.length > 3 ? 3 : pets.length,
                               (index) => Positioned(
-                                left: index * 20.0, // Efek tumpukan
+                                left: index * 20.0, 
                                 child: Container(
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
@@ -165,7 +162,6 @@ class _VpmHomeScreenState extends State<VpmHomeScreen> {
                           ),
                         ),
                       
-                      // Jarak kecil antara avatar terakhir dengan teks
                       const SizedBox(width: 8),
 
                       Text(
