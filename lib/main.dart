@@ -17,7 +17,8 @@ import 'features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
 import 'features/history/history_page.dart';
 import 'features/rewards/screens/rewards_page.dart';
 import 'owner_profile/profile_page.dart';
-
+// Main Navigation (dengan bottom navbar)
+import 'main_navigation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +69,6 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.orange,
         textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
-
       home: SplashWelcomeScreen(),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
@@ -77,13 +77,13 @@ class _MyAppState extends State<MyApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', ''), // English, no country code
-        Locale('id', ''), // Indonesian, no country code
+        Locale('en', ''),
+        Locale('id', ''),
       ],
       routes: {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
-        '/home': (context) => VpmHomeScreen(),
+        '/home': (context) => const MainNavigation(),
       },
     );
   }
