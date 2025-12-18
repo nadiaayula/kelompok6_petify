@@ -233,30 +233,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // --- VIRTUAL PET SECTION TITLE ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: GestureDetector( // 1. Tambahkan GestureDetector di sini
+                child: GestureDetector( 
                   onTap: () {
-                    // 2. Navigasi ke VpmHomeScreen
-                    Navigator.pushNamed(context, '/home'); 
-                    
-                    // Atau jika kamu tidak pakai named routes, gunakan:
-                    // Navigator.push(context, MaterialPageRoute(builder: (_) => const VpmHomeScreen()));
+                    Navigator.pushNamed(context, '/vpm'); 
                   },
                   child: SizedBox(
                     width: double.infinity,
-                    // Tambahkan warna transparan agar area kosong di sebelah teks juga bisa diklik
                     child: Container(
                       color: Colors.transparent, 
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start, 
                         children: [
-                          Row( // Tambahkan Row agar ada indikator visual kalau ini bisa diklik
+                          Row( 
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
                                 "Virtual Pet Wellbeings", 
                                 style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)
                               ),
-                              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), // Indikator panah kecil
+                              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), 
                             ],
                           ),
                           Text(
