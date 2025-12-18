@@ -17,6 +17,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
   bool _isLoading = false;
 
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
 
   final List<String> _catBreeds = ['Angora', 'Domestik', 'Ragdoll', 'Persian', 'Siamese'];
   final List<String> _dogBreeds = ['Golden Retriever', 'Poodle', 'Bulldog', 'Beagle'];
@@ -26,6 +27,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
@@ -86,7 +88,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
         'breed': _selectedBreed,
         'gender': _selectedGender == 'Jantan' ? 'male' : 'female', 
         'birth_date': birthDate.toIso8601String(),
-        'weight_kg': 0.0,
+        'weight_kg': double.tryParse(_weightController.text) ?? 0.0,
         'image_url': _selectedPetType == 'Kucing' 
             ? 'assets/images/icon_cat_main.png' 
             : 'assets/images/icon_dog_main.png',
@@ -195,6 +197,17 @@ class _AddPetScreenState extends State<AddPetScreen> {
                 TextField(
                   controller: _nameController,
                   decoration: _inputDecoration('Nama'),
+                ),
+                const SizedBox(height: 26),
+                const Text(
+                  'Berat badan (kg)',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _weightController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true), 
+                  decoration: _inputDecoration('Contoh: 3.5'),
                 ),
                 const SizedBox(height: 26),
                 const Text(
