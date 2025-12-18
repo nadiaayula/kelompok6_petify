@@ -12,7 +12,7 @@ import 'features/auth/screens/register_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 import 'features/virtual_pet_wellbeings/screens/add_medical_record_screen.dart';
-import 'features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
 // Other features
 import 'features/history/history_page.dart';
 import 'features/rewards/screens/rewards_page.dart';
