@@ -89,14 +89,23 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
         return;
       }
 
-      // Fetch Medical Records
-      final medicalResponse = await Supabase.instance.client
+      // Base query for Medical Records
+      var medicalQuery = Supabase.instance.client
           .from('medical_records')
           .select('*, pets(name, species, image_url), clinic(name, doctor_name)')
-          .eq('pets.owner_id', userId)
-          .order('visit_date', ascending: false);
+          .eq('pets.owner_id', userId);
 
-      List<MedicalRecord> medicalRecords = (medicalResponse as List).map((data) {
+      // Apply species filter if not 'all'
+      if (_animalFilter != 'all') {
+        medicalQuery = medicalQuery.eq('pets.species', _animalFilter);
+      }
+      
+      final medicalResponse = await medicalQuery.order('visit_date', ascending: false);
+
+      // Filter out records where 'pets' is null and then map
+      List<MedicalRecord> medicalRecords = (medicalResponse as List)
+          .where((data) => data['pets'] != null)
+          .map((data) {
         final petData = data['pets'] as Map<String, dynamic>;
         final clinicData = data['clinic'] as Map<String, dynamic>?;
         return MedicalRecord(
@@ -116,14 +125,23 @@ class _MedicalRecordScreenState extends State<MedicalRecordScreen> {
         );
       }).toList();
 
-      // Fetch Vaccination Records
-      final vaccinationResponse = await Supabase.instance.client
+      // Base query for Vaccination Records
+      var vaccinationQuery = Supabase.instance.client
           .from('vaccination_records')
           .select('*, pets(name, species, image_url), clinic(name)')
-          .eq('pets.owner_id', userId)
-          .order('vaccination_date', ascending: false);
+          .eq('pets.owner_id', userId);
 
-      List<MedicalRecord> vaccinationRecords = (vaccinationResponse as List).map((data) {
+      // Apply species filter if not 'all'
+      if (_animalFilter != 'all') {
+        vaccinationQuery = vaccinationQuery.eq('pets.species', _animalFilter);
+      }
+
+      final vaccinationResponse = await vaccinationQuery.order('vaccination_date', ascending: false);
+
+      // Filter out records where 'pets' is null and then map
+      List<MedicalRecord> vaccinationRecords = (vaccinationResponse as List)
+          .where((data) => data['pets'] != null)
+          .map((data) {
         final petData = data['pets'] as Map<String, dynamic>;
         final clinicData = data['clinic'] as Map<String, dynamic>?;
         return MedicalRecord(
