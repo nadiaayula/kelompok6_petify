@@ -6,6 +6,9 @@ import 'package:kelompok6_adoptify/owner_profile/profile_page.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/medical_record_screen.dart';
 import 'package:kelompok6_adoptify/features/history/history_page.dart';
 import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/add_pet_screen.dart'; 
+import 'package:kelompok6_adoptify/features/rewards/screens/rewards_page.dart';
+import 'package:kelompok6_adoptify/features/rewards/screens/reward_confirmation_page.dart';
+import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/vpm_home_screen.dart';
 
 // =============================
 // 1. PET MODEL
@@ -32,8 +35,7 @@ class Pet {
       return species ?? 'Unknown';
     }
 
-    // Calculate age logic (Simplified for display)
-    String displayAge = "6 Bulan"; // Default fallback
+    String displayAge = "6 Bulan"; 
     if (json['birth_date'] != null) {
       try {
         final birthDate = DateTime.parse(json['birth_date']);
@@ -70,7 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late Future<List<Pet>> _petsFuture;
 
   // State Variables
-  String userName = "Loading..."; // Default text while fetching
+  String userName = "Loading...";
   String userProvince = "Loading...";
   String? userAvatar;
   int userPoints = 0; 
@@ -105,15 +107,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return;
       }
 
-      // 1. Fetch Profile
-      // FIX: Changed to 'owner_profile' (singular) and 'user_id' based on your feedback
       final profileResponse = await Supabase.instance.client
           .from('owner_profile') 
           .select()
-          .eq('user_id', user.id) // Assuming 'user_id' is the foreign key column
+          .eq('user_id', user.id)
           .maybeSingle(); 
 
-      // 2. Fetch Points
       final pointsResponse = await Supabase.instance.client
           .from('user_points')
           .select('total_points')
@@ -122,14 +121,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       if (mounted) {
         setState(() {
-          // Update Profile Data
           if (profileResponse != null) {
-            // FIX: Try 'display_name' first, then 'full_name'
             userName = profileResponse['display_name'] ?? profileResponse['full_name'] ?? "User"; 
             userProvince = profileResponse['province'] ?? "Belum ada lokasi"; 
             userAvatar = profileResponse['avatar_url'];
           } else {
-            // Fallback if profile row is missing, check Auth Metadata
             userName = user.userMetadata?['full_name'] ?? user.userMetadata?['name'] ?? "User";
           }
           
@@ -142,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       debugPrint("Error fetching user data: $e");
       if (mounted) {
         setState(() {
-          userName = "User"; // Safe fallback
+          userName = "User";
         });
       }
     }
@@ -154,7 +150,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (user == null) return [];
 
       final supabase = Supabase.instance.client;
-      // STRICT FILTER: Only show pets belonging to this user
       final response = await supabase
           .from('pets')
           .select()
@@ -200,7 +195,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Displays "Loading..." initially, then the fetched name
                           Text(
                             "Halo, $userName!", 
                             style: GoogleFonts.plusJakartaSans(
@@ -230,36 +224,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // --- VIRTUAL PET SECTION TITLE ---
+              // --- VIRTUAL PET TITLE (Updated with Navigation) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: GestureDetector( 
+                child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, '/vpm'); 
+                    // Navigate to VpmHomeScreen (Main Virtual Pet Wellbeing Page)
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const VpmHomeScreen()),
+                    );
                   },
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Container(
-                      color: Colors.transparent, 
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start, 
-                        children: [
-                          Row( 
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Virtual Pet Wellbeings", 
-                                style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)
-                              ),
-                              const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey), 
-                            ],
-                          ),
-                          Text(
-                            "Tingkatkan kepedulian dengan peliharaanmu", 
-                            style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)
-                          ),
-                        ],
-                      ),
+                  child: Container(
+                    color: Colors.transparent, // Ensures hit test works on full area
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Virtual Pet Wellbeings", 
+                              textAlign: TextAlign.start,
+                              style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)
+                            ),
+                            // Arrow Icon
+                            const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                          ],
+                        ),
+                        Text(
+                          "Tingkatkan kepedulian dengan peliharaanmu", 
+                          textAlign: TextAlign.start,
+                          style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -267,11 +265,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 16),
 
-              // --- PET CONTENT (Conditional Rendering) ---
+              // --- PET CONTENT ---
               FutureBuilder<List<Pet>>(
                 future: _petsFuture,
                 builder: (context, snapshot) {
-                  // 1. Loading
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
                       padding: EdgeInsets.all(32.0),
@@ -279,20 +276,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   }
                   
-                  // 2. Error or Empty Data (New User State)
                   if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    // Show "Tambahkan Peliharaan" Widget
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: _buildEmptyPetState(context), // Pass context
+                      child: _buildEmptyPetState(context),
                     );
                   }
 
-                  // 3. Data Exists (Existing User) -> Show Carousel
                   final pets = snapshot.data!;
                   return Column(
                     children: [
-                      // Pet Carousel
                       SizedBox(
                         height: 340,
                         child: PageView.builder(
@@ -306,31 +299,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           },
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Medical Record Banner (Only visible if user has pets)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: _buildMedicalRecordBanner(context), 
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Checkpoints (Only visible if user has pets)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Checkpoints", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 16),
-                            _buildCheckpointItem("Makan", "Terakhir hari ini 10.15 AM", Icons.food_bank_outlined, const Color(0xFFF9E7D8), Colors.orange),
-                            _buildCheckpointItem("Mandi", "Terakhir Kemarin 16 April 2024", Icons.shower_outlined, const Color(0xFFFAE0E4), Colors.pink),
-                            _buildCheckpointItem("Vaksinasi", "Terakhir Rabu 12 April 2024", Icons.medical_services_outlined, const Color(0xFFF9E7D8), Colors.orange),
-                          ],
-                        ),
-                      ),
+                      ),                
                     ],
                   );
                 },
@@ -338,16 +311,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // --- REWARDS SECTION (Always Visible) ---
+              // --- REWARDS SECTION (UPDATED) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Rewards Point", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text("Tukar poin dengan reward yang kamu mau!", style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)),
+                    // REWARD HEADER -> Directs to RewardsPage
+                    GestureDetector(
+                      onTap: () {
+                         Navigator.push(
+                           context,
+                           MaterialPageRoute(builder: (_) => const RewardsPage()),
+                         );
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text("Rewards Point", style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)),
+                              Text("Tukar poin dengan reward yang kamu mau!", style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey)),
+                            ],
+                          ),
+                          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey)
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    _buildRewardsList(),
+                    // REWARD LIST -> Directs to Confirmation Page
+                    _buildRewardsList(), 
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -363,7 +357,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // HELPER WIDGETS
   // =============================
 
-  // EMPTY STATE WIDGET (For New Users)
   Widget _buildEmptyPetState(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -404,13 +397,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () async {
-              // Navigate to AddPetScreen and wait for result (true = refresh)
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AddPetScreen()),
               );
-
-              // If returned true, refresh the pet list
               if (result == true) {
                 setState(() {
                   _petsFuture = _fetchPets();
@@ -533,18 +523,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCheckpointItem(String title, String subtitle, IconData icon, Color bgColor, Color iconColor) {
-    return Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), child: Row(children: [Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: iconColor, size: 26)), const SizedBox(width: 16), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text(subtitle, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey))]))]));
-  }
+
 
   Widget _buildRewardsList() {
     final rewards = [
-      {"name": "Mainan", "icon": Icons.toys_outlined, "color": const Color(0xFFFEE7E6)},
-      {"name": "Makanan", "icon": Icons.lunch_dining_outlined, "color": const Color(0xFFD3F8D3)},
-      {"name": "Minum", "icon": Icons.water_drop_outlined, "color": const Color(0xFFD2EFFD)},
-      {"name": "Pasir", "icon": Icons.grass_outlined, "color": const Color(0xFFFEE7F6)},
+      {"name": "Pet Kit", "points": "500", "image": "assets/images/medical_kit.png"},
+      {"name": "Makanan", "points": "250", "image": "assets/images/makanan.png"},
+      {"name": "Sisir Bulu", "points": "150", "image": "assets/images/sisir.png"},
     ];
-    return SizedBox(height: 95, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: rewards.length, separatorBuilder: (_, __) => const SizedBox(width: 20), itemBuilder: (context, index) { return Column(children: [Container(width: 60, height: 60, decoration: BoxDecoration(color: rewards[index]["color"] as Color, shape: BoxShape.circle), child: Icon(rewards[index]["icon"] as IconData, color: Colors.black54)), const SizedBox(height: 8), Text(rewards[index]["name"] as String, style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.grey[700]))]);}));
+
+    return SizedBox(
+      height: 160, 
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: rewards.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+           final item = rewards[index];
+           return GestureDetector(
+             onTap: () {
+               // Direct to Item Page (RewardConfirmationPage)
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                   builder: (context) => RewardConfirmationPage(
+                     rewardName: item['name']!,
+                     rewardPoints: item['points']!,
+                     imageUrl: item['image'],
+                     // Add other params if needed
+                     rewardId: 'dummy-$index', // Fallback ID
+                   )
+                 ),
+               );
+             },
+             child: Container(
+               width: 120,
+               padding: const EdgeInsets.all(12),
+               decoration: BoxDecoration(
+                 color: Colors.white,
+                 borderRadius: BorderRadius.circular(16),
+                 boxShadow: [
+                   BoxShadow(
+                     color: Colors.grey.withOpacity(0.08), 
+                     blurRadius: 10, 
+                     offset: const Offset(0, 4)
+                   )
+                 ]
+               ),
+               child: Column(
+                 mainAxisAlignment: MainAxisAlignment.center,
+                 children: [
+                   Expanded(
+                     child: Image.asset(
+                       item['image']!, 
+                       fit: BoxFit.contain,
+                       errorBuilder: (c,e,s) => const Icon(Icons.card_giftcard, size: 40, color: Colors.orange)
+                     ),
+                   ),
+                   const SizedBox(height: 8),
+                   Text(
+                     item['name']!, 
+                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, fontSize: 14), 
+                     textAlign: TextAlign.center,
+                     maxLines: 1,
+                     overflow: TextOverflow.ellipsis,
+                   ),
+                   const SizedBox(height: 4),
+                   Text(
+                     "${item['points']} pts", 
+                     style: GoogleFonts.plusJakartaSans(fontSize: 12, color: Colors.orange, fontWeight: FontWeight.w600)
+                   ),
+                 ],
+               ),
+             ),
+           );
+        },
+      ),
+    );
   }
 }
 
