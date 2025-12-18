@@ -61,7 +61,7 @@ class _AddPetScreenState extends State<AddPetScreen> {
     );
   }
 
-  // FUNGSI SIMPAN KE SUPABASE
+  // FUNGSI SIMPAN KE SUPABASE (Update di add_pet_screen.dart)
   Future<void> _submit() async {
     if (!_validateForm()) return;
 
@@ -71,8 +71,6 @@ class _AddPetScreenState extends State<AddPetScreen> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) throw 'User tidak ditemukan. Silakan login kembali.';
 
-      // LOGIKA TANGGAL LAHIR: Hitung mundur dari sekarang
-      // Misal user input 1 Tahun 2 Bulan, maka birthDate = sekarang - 1 thn - 2 bln
       final now = DateTime.now();
       final birthDate = DateTime(
         now.year - (_ageYears ?? 0),
@@ -82,13 +80,13 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
       // INSERT KE TABEL 'pets'
       await Supabase.instance.client.from('pets').insert({
-        'owner_id': user.id, // ID User yang login
+        'owner_id': user.id,
         'name': _nameController.text.trim(),
-        'species': _selectedPetType, // 'Kucing' / 'Anjing'
+        'species': _selectedPetType == 'Kucing' ? 'cat' : 'dog', // Sesuaikan jika enum species juga bahasa Inggris
         'breed': _selectedBreed,
-        'gender': _selectedGender,
-        'birth_date': birthDate.toIso8601String(), // Format yang dimengerti SQL
-        'weight_kg': 0.0, // Bisa ditambah input di UI nanti
+        'gender': _selectedGender == 'Jantan' ? 'male' : 'female', 
+        'birth_date': birthDate.toIso8601String(),
+        'weight_kg': 0.0,
         'image_url': _selectedPetType == 'Kucing' 
             ? 'assets/images/icon_cat_main.png' 
             : 'assets/images/icon_dog_main.png',
@@ -96,12 +94,8 @@ class _AddPetScreenState extends State<AddPetScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Peliharaan berhasil ditambahkan!'),
-            backgroundColor: Colors.green,
-          ),
+          const SnackBar(content: Text('Peliharaan berhasil ditambahkan!'), backgroundColor: Colors.green),
         );
-        // Kembali ke Home dengan membawa nilai 'true' untuk trigger refresh otomatis
         Navigator.pop(context, true);
       }
     } catch (e) {
