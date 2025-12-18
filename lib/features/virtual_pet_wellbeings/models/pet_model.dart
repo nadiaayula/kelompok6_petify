@@ -35,23 +35,38 @@ class Pet {
 
   // Mapper dari JSON Supabase ke Object Flutter (Update di pet_model.dart)
   factory Pet.fromJson(Map<String, dynamic> json) {
-    // Mapping Gender dari DB ke UI
-    String displayGender = json['gender'].toString().toLowerCase() == 'male' 
-        ? 'Jantan' 
-        : 'Betina';
+    // 1. Ambil data mentah dari JSON dan bersihkan (kecilkan huruf & hapus spasi)
+    String rawGender = (json['gender'] ?? '').toString().toLowerCase().trim();
+    String rawSpecies = (json['species'] ?? '').toString().toLowerCase().trim();
+
+    // 2. Mapping Gender: DB ('male'/'female') -> UI ('Jantan'/'Betina')
+    String displayGender;
+    if (rawGender == 'male') {
+      displayGender = 'Jantan';
+    } else if (rawGender == 'female') {
+      displayGender = 'Betina';
+    } else {
+      displayGender = json['gender'] ?? 'Unknown'; // Fallback kalau datanya aneh
+    }
     
-    // Mapping Species dari DB ke UI (Jika di DB isinya 'cat'/'dog')
-    String displaySpecies = json['species'].toString().toLowerCase() == 'cat' 
-        ? 'Kucing' 
-        : 'Anjing';
+    // 3. Mapping Species: DB ('cat'/'dog') -> UI ('Kucing'/'Anjing')
+    // Ini KUNCI supaya gambar Kucing muncul beneran (tidak jadi Anjing terus)
+    String displaySpecies;
+    if (rawSpecies == 'cat' || rawSpecies == 'kucing') {
+      displaySpecies = 'Kucing';
+    } else if (rawSpecies == 'dog' || rawSpecies == 'anjing') {
+      displaySpecies = 'Anjing';
+    } else {
+      displaySpecies = json['species'] ?? 'Unknown';
+    }
 
     return Pet(
-      id: json['id'],
-      ownerId: json['owner_id'],
-      name: json['name'],
-      species: displaySpecies,
+      id: json['id'] ?? '',
+      ownerId: json['owner_id'] ?? '',
+      name: json['name'] ?? 'Tanpa Nama',
+      species: displaySpecies, // Hasil terjemahan tadi dipakai di sini
       breed: json['breed'],
-      gender: displayGender,
+      gender: displayGender,   // Hasil terjemahan tadi dipakai di sini
       birthDate: json['birth_date'] != null 
           ? DateTime.parse(json['birth_date']) 
           : null,
