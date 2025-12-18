@@ -171,11 +171,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       
       final totalPoints = pointsResult as int? ?? 0;
       
-      // Get all rewards from 'food' category
+      // Get all rewards from 'all' category
       final rewardsResult = await Supabase.instance.client.rpc(
         'get_rewards',
         params: {
-          'p_category': 'food',
+          'p_category': null,
           'p_search_query': null,
         },
       );
@@ -187,9 +187,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (rewardsResult is List && rewardsResult.isNotEmpty) {
             // Filter rewards that user can afford
             affordableRewards = List<Map<String, dynamic>>.from(rewardsResult)
-                .where((reward) => (reward['points_required'] as int? ?? 0) <= totalPoints)
-                .take(3) // Take only first 3
-                .toList();
+                .where((reward) =>
+                reward['is_active'] == true &&
+                (reward['stock'] ?? 0) > 0 &&
+                (reward['points_required'] ?? 0) <= totalPoints)
+                 .take(3)
+                 .toList();
           } else {
             _loadFallbackRewards();
           }
