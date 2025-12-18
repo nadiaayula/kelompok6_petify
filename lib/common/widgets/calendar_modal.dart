@@ -60,13 +60,16 @@ class _CalendarModalState extends State<CalendarModal> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              Text(
-                '${_months[_currentMonth.month - 1]} ${_currentMonth.year}',
-                style: const TextStyle(
-                  fontFamily: 'PlusJakartaSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
+              GestureDetector(
+                onTap: () => _showYearPicker(context),
+                child: Text(
+                  '${_months[_currentMonth.month - 1]} ${_currentMonth.year}',
+                  style: const TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
               IconButton(
@@ -185,6 +188,40 @@ class _CalendarModalState extends State<CalendarModal> {
         ],
       ),
     );
+  }
+
+  void _showYearPicker(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final int currentYear = DateTime.now().year;
+        final List<int> years = List<int>.generate(101, (i) => currentYear - i); // Last 100 years
+        return AlertDialog(
+          title: const Text("Pilih Tahun"),
+          content: SizedBox(
+            width: 300,
+            height: 300,
+            child: ListView.builder(
+              itemCount: years.length,
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(
+                  title: Text(years[index].toString()),
+                  onTap: () {
+                    Navigator.of(context).pop(years[index]);
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
+    ).then((selectedYear) {
+      if (selectedYear != null) {
+        setState(() {
+          _currentMonth = DateTime(selectedYear, _currentMonth.month);
+        });
+      }
+    });
   }
 
   Widget _buildCalendarGrid() {
