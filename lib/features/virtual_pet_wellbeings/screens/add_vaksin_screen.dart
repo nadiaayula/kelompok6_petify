@@ -25,6 +25,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   String _selectedCountryCode = '🇮🇩';
 
   final _medicalNotesController = TextEditingController();
+  final _weightController = TextEditingController();
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       }
       final response = await Supabase.instance.client
           .from('pets')
-          .select('id, name')
+          .select('id, name, weight_kg')
           .eq('owner_id', userId);
 
       print('Supabase response: $response'); // Debug print
@@ -81,7 +82,17 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   @override
   void dispose() {
     _medicalNotesController.dispose();
+    _weightController.dispose();
     super.dispose();
+  }
+
+  T? _firstWhereOrNull<T>(List<T> list, bool Function(T element) test) {
+    for (var element in list) {
+      if (test(element)) {
+        return element;
+      }
+    }
+    return null;
   }
 
   @override
@@ -180,17 +191,21 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          DropdownButtonFormField<String>(
-            value: _selectedPetId,
+          DropdownButtonFormField<Map<String, dynamic>>(
+            value: _selectedPetId == null
+                ? null
+                : _firstWhereOrNull(_pets, (pet) => pet['id'] == _selectedPetId),
             hint: const Text('Pilih peliharaan'),
-            onChanged: (String? newValue) {
+            onChanged: (Map<String, dynamic>? newValue) {
               setState(() {
-                _selectedPetId = newValue;
+                _selectedPetId = newValue?['id'];
+                _weightController.text =
+                    (newValue?['weight_kg'] ?? '').toString();
               });
             },
-            items: _pets.map<DropdownMenuItem<String>>((Map<String, dynamic> pet) {
-              return DropdownMenuItem<String>(
-                value: pet['id'],
+            items: _pets.map<DropdownMenuItem<Map<String, dynamic>>>((Map<String, dynamic> pet) {
+              return DropdownMenuItem<Map<String, dynamic>>(
+                value: pet,
                 child: Text(pet['name']),
               );
             }).toList(),
@@ -202,6 +217,33 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
                 borderSide: BorderSide.none,
               ),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                    hint: 'Berat peliharaan', controller: _weightController),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFE5E5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Kg',
+                  style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFFF6B6B),
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 25),
 
@@ -333,6 +375,13 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
   }
 
   Future<void> _saveVaccinationRecord() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Pengguna tidak ditemukan. Silakan login kembali.')),
+      );
+      return;
+    }
     if (_selectedPetId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Silakan pilih peliharaan.')),
@@ -363,6 +412,15 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
     });
 
     try {
+      final newWeight = double.tryParse(_weightController.text);
+      if (newWeight != null) {
+        await Supabase.instance.client
+            .from('pets')
+            .update({'weight_kg': newWeight})
+            .eq('id', _selectedPetId!)
+            .eq('owner_id', userId);
+      }
+      
       final vaccinationRecord = {
         'pet_id': _selectedPetId,
         'vaccination_date': _selectedDate!.toIso8601String(),
@@ -388,6 +446,7 @@ class _AddVaksinScreenState extends State<AddVaksinScreen> {
 
 
     } catch (e) {
+      print('Error saving vaccination record: $e'); // LOG THE ERROR
       if (!mounted) return;
       showDialog(
         context: context,

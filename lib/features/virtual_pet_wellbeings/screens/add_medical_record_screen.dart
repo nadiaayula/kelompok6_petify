@@ -383,6 +383,13 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
   }
 
   Future<void> _saveMedicalRecord() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Pengguna tidak ditemukan. Silakan login kembali.')),
+      );
+      return;
+    }
     if (_selectedPetId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Silakan pilih peliharaan.')),
@@ -411,7 +418,9 @@ class _AddMedicalRecordScreenState extends State<AddMedicalRecordScreen> {
       if (newWeight != null) {
         await Supabase.instance.client
             .from('pets')
-            .update({'weight_kg': newWeight}).eq('id', _selectedPetId!);
+            .update({'weight_kg': newWeight})
+            .eq('id', _selectedPetId!)
+            .eq('owner_id', userId);
       }
 
       final combinedNotes = [
