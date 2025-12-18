@@ -153,9 +153,15 @@ class _HistoryPageState extends State<HistoryPage> {
                     const SizedBox(height: 20),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Center(
                       child: Text(
                         "Riwayat & Points",
-                        style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),

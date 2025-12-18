@@ -51,7 +51,7 @@ class _RewardsPageState extends State<RewardsPage> {
       });
       
       final utamaResult = await supabase.rpc('get_rewards', params: {
-        'p_category': 'food',
+        'p_category': null,
         'p_search_query': null,
       });
       
@@ -64,10 +64,13 @@ class _RewardsPageState extends State<RewardsPage> {
           return;
         }
         if (utamaResult is List) {
-          // Filter rewards yang poinnya <= total points user
+          // Filter rewards yang poinnya kurang dari atau sama dengan total points user
           kebutuhanUtamaRewards = List<Map<String, dynamic>>.from(utamaResult)
-              .where((reward) => (reward['points_required'] as int? ?? 0) <= totalPoints)
-              .toList();
+            .where((reward) =>
+            reward['is_active'] == true &&
+            (reward['stock'] ?? 0) > 0 &&
+            (reward['points_required'] ?? 0) <= totalPoints)
+            .toList();
         }
         isLoading = false;
       });
@@ -167,11 +170,6 @@ class _RewardsPageState extends State<RewardsPage> {
                             ),
                           ],
                         ),
-                      ),
-                      const CircleAvatar(
-                        radius: 20,
-                        backgroundColor: Colors.amber,
-                        child: Text('👨', style: TextStyle(fontSize: 20)),
                       ),
                     ],
                   ),
