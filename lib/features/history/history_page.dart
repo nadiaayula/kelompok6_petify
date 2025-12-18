@@ -31,18 +31,18 @@ class HistoryData {
     required this.asset,
   });
 
-factory HistoryData.fromJson(Map<String, dynamic> json) {
-  return HistoryData(
-    type: json['activity_type'] ?? '',
-    animal: json['animal'] ?? '',
-    title: json['title'] ?? '',
-    subtitle: json['subtitle'] ?? '',
-    points: json['points'] ?? 0,
-    time: json['activity_time'] ?? '',
-    date: json['activity_date'] ?? '', 
-    asset: json['asset'] ?? 'assets/images/kucing1.png',
-  );
-}
+  factory HistoryData.fromJson(Map<String, dynamic> json) {
+    return HistoryData(
+      type: json['activity_type'] ?? '',
+      animal: json['animal'] ?? '',
+      title: json['title'] ?? '',
+      subtitle: json['subtitle'] ?? '',
+      points: json['points'] ?? 0,
+      time: json['activity_time'] ?? '',
+      date: json['activity_date'] ?? '', 
+      asset: json['asset'] ?? 'assets/images/kucing1.png',
+    );
+  }
 }
 
 class HistoryPage extends StatefulWidget {
@@ -166,6 +166,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: filtered.isEmpty 
                           ? [const Center(child: Text('Tidak ada riwayat'))]
                           : _buildGroupedHistory(filtered),
@@ -231,6 +232,25 @@ class _HistoryPageState extends State<HistoryPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
+          // Back Button
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6)],
+              ),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                size: 20,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),

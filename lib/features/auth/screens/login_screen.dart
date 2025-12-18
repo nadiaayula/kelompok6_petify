@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:kelompok6_adoptify/features/auth/screens/register_screen.dart';
-import 'package:kelompok6_adoptify/features/virtual_pet_wellbeings/screens/dashboard_screen.dart';
+import 'package:kelompok6_adoptify/main_navigation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,9 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
           password: password,
         );
         if (mounted) {
+          // Ke MainNavigation (dengan navbar)
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const DashboardScreen(),
+              builder: (context) => const MainNavigation(),
             ),
           );
         }
@@ -97,11 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
       // Check if user is signed in
       final session = Supabase.instance.client.auth.currentSession;
       if (session != null && mounted) {
+        // ✅ Ganti ke MainNavigation (dengan navbar)
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => const DashboardScreen(),
+            builder: (context) => const MainNavigation(),
           ),
         );
+        // Atau pake route:
+        // Navigator.pushReplacementNamed(context, '/home');
       }
     } on AuthException catch (error) {
       if (mounted) {
